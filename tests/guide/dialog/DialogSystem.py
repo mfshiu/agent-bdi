@@ -1,7 +1,7 @@
 from holon.HolonicAgent import HolonicAgent
-from guide.dialog.Nlu import Nlu
-from guide.dialog.AudioInput import AudioInput
-from guide.dialog.AudioOutput import AudioOutput
+from dialog.Nlu import Nlu
+from dialog.AudioInput import AudioInput
+from dialog.AudioOutput import AudioOutput
 
 class DialogSystem(HolonicAgent) :
     def __init__(self):

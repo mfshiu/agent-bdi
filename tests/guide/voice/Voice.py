@@ -1,6 +1,6 @@
 from holon.HolonicAgent import HolonicAgent
-from guide.voice.Speaker import Speaker
-from guide.voice.ToneProcessing import ToneProcessing
+from voice.Speaker import Speaker
+from voice.ToneProcessing import ToneProcessing
 
 class Voice(HolonicAgent) :
     def __init__(self):

@@ -1,7 +1,7 @@
-from guide.navi.VisualInput import VisualInput
+from navi.VisualInput import VisualInput
 from holon.HolonicAgent import HolonicAgent
-from guide.navi.RouteFind import RouteFind
-from guide.navi.walk.WalkGuide import WalkGuide
+from navi.RouteFind import RouteFind
+from navi.walk.WalkGuide import WalkGuide
 
 class NaviSystem(HolonicAgent) :
     def __init__(self):

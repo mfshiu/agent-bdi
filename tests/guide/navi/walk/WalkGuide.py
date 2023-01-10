@@ -1,5 +1,5 @@
-from guide.navi.walk.KanbanDetect import KanbanDetect
-from guide.navi.walk.RoadDetect import RoadDetect
+from navi.walk.KanbanDetect import KanbanDetect
+from navi.walk.RoadDetect import RoadDetect
 from holon.HolonicAgent import HolonicAgent
 
 class WalkGuide(HolonicAgent):

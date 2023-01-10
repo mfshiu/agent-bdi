@@ -1,6 +1,6 @@
 from holon.HolonicAgent import HolonicAgent
-from guide.visual.Camera import Camera
-from guide.visual.ImagePreprocessing import ImagePreprocessing
+from visual.Camera import Camera
+from visual.ImagePreprocessing import ImagePreprocessing
 
 class Visual(HolonicAgent) :
     def __init__(self):

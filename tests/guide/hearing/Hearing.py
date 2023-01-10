@@ -1,6 +1,6 @@
 from holon.HolonicAgent import HolonicAgent
-from guide.hearing.Microphone import Microphone
-from guide.hearing.BackgroundDenoising import BackgroundDenoising
+from hearing.Microphone import Microphone
+from hearing.BackgroundDenoising import BackgroundDenoising
 
 class Hearing(HolonicAgent) :
     def __init__(self):

@@ -12,12 +12,12 @@ import paho.mqtt.client as mqtt
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
-import config
 import Helper
 from core.Agent import Agent
 from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
+from holon import config
 
 class HolonicAgent(Agent) :
     def __init__(self, b:Blackboard=None, d:HolonicDesire=None, i: HolonicIntention=None):
@@ -39,26 +39,9 @@ class HolonicAgent(Agent) :
     def _on_message(self, client, db, msg):
         data = msg.payload.decode('utf-8', 'ignore')
         logging.debug("topic: %s, data: %s" % (msg.topic, data))
-        # if data:
-        #     try:
-        #         data = json.loads(data)
-        #     except:
-        #         write_log("[ERROR] json.loads(data)")
-        #         topic = ""
-        #         data = {}
 
         if "terminate" == msg.topic:
             self._terminate_lock.set()
-        # elif "awakable" == msg.topic:
-        #     self.awakable = "on" == data["status"]
-        # elif "indoor" == msg.topic:
-        #     self.indoor = "on" == data["status"]
-        # elif "kanban_indoor" == msg.topic:
-        #     Information.set_indoor_kanbans(data)
-        # elif "arrived" == msg.topic:
-        #     self.arrived = "on" == data["status"]
-        # elif "echo" == msg.topic:
-        #     write_log("An echo got.")
     
     def _run_begin(self):
         Helper.init_logging()
@@ -82,7 +65,6 @@ class HolonicAgent(Agent) :
 
     def _run_interval(self):
         pass
-        # Helper.write_log("_run_interval")
 
     def _running(self):
         logging.debug("running")

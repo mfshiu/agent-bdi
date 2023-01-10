@@ -1,6 +1,6 @@
 import logging
 
-from guide.GuideMain import GuideMain
+from GuideMain import GuideMain
 import Helper
 
 if __name__ == '__main__':
