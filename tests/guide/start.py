@@ -1,11 +1,12 @@
-import logging
+# import logging
 
 from GuideMain import GuideMain
-import Helper
+# import Helper
 
 if __name__ == '__main__':
-    Helper.init_logging()
-    logging.info('***** Main start *****')
+    # Helper.init_logging()
+    # logging.info('***** Main start *****')
+    print('***** Main start *****')
 
     a = GuideMain()
     a.start()
