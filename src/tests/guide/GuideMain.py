@@ -1,7 +1,7 @@
 import logging
 import time
 
-from src.holon.HolonicAgent import HolonicAgent
+from holon.HolonicAgent import HolonicAgent
 from visual.Visual import Visual
 from hearing.Hearing import Hearing
 from voice.Voice import Voice
