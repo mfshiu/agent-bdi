@@ -8,7 +8,7 @@ from voice.Voice import Voice
 from navi.NaviSystem import NaviSystem
 from dialog.DialogSystem import DialogSystem
 
-class GuideMain(HolonicAgent) :
+class GuideMain(HolonicAgent):
     def __init__(self):
         super().__init__()
         self.body_agents.append(NaviSystem())

@@ -36,13 +36,26 @@ class HolonicAgent(Agent) :
         client.subscribe("echo")
         client.subscribe("terminate")
 
+        self._on_connected()
+
+
+    def _on_connected(self):
+        pass
+
+
     def _on_message(self, client, db, msg):
         data = msg.payload.decode('utf-8', 'ignore')
-        logging.debug("topic: %s, data: %s" % (msg.topic, data))
 
         if "terminate" == msg.topic:
             self._terminate_lock.set()
-    
+
+        self._on_topic(msg.topic, data)
+
+
+    def _on_topic(self, topic, data):
+        logging.debug("topic: %s, data: %s" % (topic, data))
+
+
     def _run_begin(self):
         Helper.init_logging()
         logging.info(f"_run_begin: {self.__class__.__name__}")
