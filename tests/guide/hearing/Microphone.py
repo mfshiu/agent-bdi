@@ -168,7 +168,7 @@ class Microphone(HolonicAgent) :
 
 
 if __name__ == '__main__':
-    logging.info('***** Microphone start *****')
+    logging.info('***** Microphone start 1 *****')
     a = Microphone()
     a.start()
 
