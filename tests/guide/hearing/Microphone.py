@@ -2,9 +2,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from datetime import datetime as dt
-import math
-import struct
-import time
+import threading
 
 import logging
 import numpy as np
@@ -18,8 +16,9 @@ CHUNK = 2048
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
+RECORD_SECONDS = 5
 MAX_RECORD_SECONDS = 10 * 60
-SILENCE_THRESHOLD = (RATE // CHUNK) * 0.5
+SILENCE_THRESHOLD = (RATE // CHUNK) * 0.28
 
 class Microphone(HolonicAgent) :
     def __init__(self):
@@ -37,9 +36,9 @@ class Microphone(HolonicAgent) :
 
         frames = []
         logging.info("Start recording")
-        for i in range(0, int(RATE / CHUNK * MAX_RECORD_SECONDS)):
+        for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
             if (self.is_running()):
-                print(".", end="")
+                # print(".", end="")
                 data = stream.read(CHUNK)
                 frames.append(data)
 
@@ -48,14 +47,17 @@ class Microphone(HolonicAgent) :
         stream.close()
         audio.terminate()
 
-        logging.debug("Write to file")
         filepath = dt.now().strftime("tests/_output/record-%m%d-%H%M-%S.wav")
-        wf = wave.open(filepath, 'wb')
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(audio.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-        wf.writeframes(b''.join(frames))
-        wf.close()
+        def write_wave_file(filepath, wave_data):
+            logging.debug("Write to file")
+            wf = wave.open(filepath, 'wb')
+            wf.setnchannels(CHANNELS)
+            wf.setsampwidth(audio.get_sample_size(FORMAT))
+            wf.setframerate(RATE)
+            wf.writeframes(wave_data)
+            wf.close()
+        # threading.Thread(target=write_wave_file, args=(filepath, b''.join(frames),)).start()
+        write_wave_file(filepath, b''.join(frames))
 
         return filepath
 
@@ -77,7 +79,7 @@ class Microphone(HolonicAgent) :
 
     def __wait_voice(self, audio_stream):
         first_frames = []
-        logging.debug("Wait voice for 60 second...")
+        logging.debug("for 60 second...")
         for _ in range(0, int(RATE / CHUNK * 60)):
             if not self.is_running():
                 break
@@ -98,15 +100,11 @@ class Microphone(HolonicAgent) :
         return first_frames if len(first_frames) else None
     
 
-    def __record_to_silence(self, audio_stream, first_frames):
+    def __record_to_silence(self, audio_stream):
         frames = []
-        print(f"frames1: {len(frames)}")
-        frames.extend(first_frames)
-        print(f"frames2: {len(frames)}")
-
         silence_count = 0
 
-        logging.info("Start recording...")
+        logging.debug("...")
         for i in range(0, int(RATE / CHUNK * MAX_RECORD_SECONDS)):
             if not self.is_running():
                 break
@@ -115,15 +113,17 @@ class Microphone(HolonicAgent) :
             except Exception as ex:
                 logging.error("Read audio stream error!\n%s", str(ex))
                 break
+            frames.append(sound_raw)
 
             if Microphone.__is_silence(sound_raw):
                 silence_count += 1
+                print('.', end='', flush=True)
             else:
-                frames.append(sound_raw)
                 silence_count = 0
-
-            if silence_count > SILENCE_THRESHOLD*2:
-                print(f"frames: {len(frames)}")
+                print('^', end='', flush=True)
+            if silence_count > SILENCE_THRESHOLD*1:
+                print()
+                logging.debug(f"silence_count:{silence_count}, frames: {len(frames)}")
                 break
 
         return frames
@@ -135,10 +135,9 @@ class Microphone(HolonicAgent) :
                             rate=RATE, input=True,
                             frames_per_buffer=CHUNK)
         
-        first_frames = self.__wait_voice(audio_stream)
-        frames = None
-        if first_frames:
-            frames = self.__record_to_silence(audio_stream, first_frames)
+        frames = self.__wait_voice(audio_stream)
+        if frames:
+            frames.extend(self.__record_to_silence(audio_stream))
 
         # Stop recording
         audio_stream.stop_stream()
@@ -147,28 +146,31 @@ class Microphone(HolonicAgent) :
 
         wave_path = None
         if frames and len(frames) >= SILENCE_THRESHOLD//2 :
-            logging.debug("Write to file...")
+            def write_wave_file(wave_path, wave_data):
+                logging.debug("Write to file...")
+                wf = wave.open(wave_path, 'wb')
+                wf.setnchannels(CHANNELS)
+                wf.setsampwidth(audio.get_sample_size(FORMAT))
+                wf.setframerate(RATE)
+                wf.writeframes(b''.join(frames))
+                wf.close()
             wave_path = dt.now().strftime("tests/_output/record-%m%d-%H%M-%S.wav")
-            wf = wave.open(wave_path, 'wb')
-            wf.setnchannels(CHANNELS)
-            wf.setsampwidth(audio.get_sample_size(FORMAT))
-            wf.setframerate(RATE)
-            wf.writeframes(b''.join(frames))
-            wf.close()
+            threading.Thread(target=write_wave_file, args=(wave_path, b''.join(frames),)).start()
+            # write_wave_file(filepath, b''.join(frames))
 
         return wave_path
 
 
     def _running(self):
         while self.is_running():
+            # filepath = self._record()
             filepath = self._record2()
             if filepath:
                 self.publish("record_file", filepath)
-        logging.info(f'Microphone...terminate')
 
 
 if __name__ == '__main__':
-    logging.info('***** Microphone start 1 *****')
+    logging.info('***** Microphone start *****')
     a = Microphone()
     a.start()
 

@@ -4,7 +4,8 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
 
-from holon import config
+from src.holon import config
+
 
 def init_logging():
     formatter = logging.Formatter(
@@ -14,10 +15,9 @@ def init_logging():
     #     '[%(levelname)1.1s %(process)5d-%(thread)11d %(asctime)s %(module)15s:%(lineno)03d %(funcName)15s] %(message)s',
     #     datefmt='%H:%M:%S')
     
-    dir = "../_log"
-    Path(dir).mkdir(parents=True, exist_ok=True)
-    path = os.path.join(dir, "abdi.log")
-    file_handler = TimedRotatingFileHandler(path, when="d")
+    Path(config.log_dir).mkdir(parents=True, exist_ok=True)
+    log_path = os.path.join(config.log_dir, "abdi.log")
+    file_handler = TimedRotatingFileHandler(log_path, when="d")
     file_handler.setFormatter(formatter)
 
     console_handler = logging.StreamHandler()
