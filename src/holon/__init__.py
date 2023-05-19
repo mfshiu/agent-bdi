@@ -8,3 +8,4 @@ class config:
     mqtt_password = "eric123"
 
     log_level = logging.DEBUG
+    log_dir = "D:\\Work\\SDK\\agent-bdi\\tests\\_log"

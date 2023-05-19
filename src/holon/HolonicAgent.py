@@ -27,16 +27,33 @@ class HolonicAgent(Agent) :
         super().__init__(b, d, i)
         self.head_agents = []
         self.body_agents = []
-        self.mqtt_client = None
         self.run_interval_seconds = 1
-        self.agent_proc = None
-        # self.is_running = False
+        self._mqtt_client = None
+        self._agent_proc = None
+        self.name = f'<{self.__class__.__name__}>'
+
+
+    def start(self):
+        logging.info(f"{self.name} ...")
+
+        self._agent_proc = Process(target=self._run)
+        self._agent_proc.start()
+
+        for a in self.head_agents:
+            a.start()
+        for a in self.body_agents:
+            a.start()
+
+# ===================================
+# |            Process              |
+# ===================================
+
 
     def is_running(self):
         return not self._terminate_lock.is_set()
 
     def _on_connect(self, client, userdata, flags, rc):
-        logging.info(f"MQTT is connected with result code {str(rc)}")
+        logging.info(f"{self.name} result code:{str(rc)}")
         client.subscribe("echo")
         client.subscribe("terminate")
 
@@ -50,23 +67,27 @@ class HolonicAgent(Agent) :
     def _on_message(self, client, db, msg):
         data = msg.payload.decode('utf-8', 'ignore')
 
-        if "terminate" == msg.topic:
-            self._terminate_lock.set()
-
         self._on_topic(msg.topic, data)
 
 
     def _on_topic(self, topic, data):
-        logging.debug("topic: %s, data: %s" % (topic, data))
+        logging.debug(f"{self.name} topic:{topic}, data:{data}")
+
+        if "terminate" == topic:
+            if data:
+                if type(self).__name__ == data:
+                    self.terminate()
+            else:
+                self.terminate()
 
 
     def _run_begin(self):
         Helper.init_logging()
-        logging.info(f"_run_begin: {self.__class__.__name__}")
+        logging.debug(f"{self.name} ...")
         
         def signal_handler(signal, frame):
-            logging.warning(f"Ctrl-C: {self.__class__.__name__}")
-            self._terminate_lock.set()
+            logging.warning(f"{self.name} Ctrl-C: {self.__class__.__name__}")
+            self.terminate()
         signal.signal(signal.SIGINT, signal_handler)
 
         self._terminate_lock = threading.Event()
@@ -85,17 +106,15 @@ class HolonicAgent(Agent) :
         pass
 
     def _running(self):
-        logging.debug("running")
+        logging.debug(f"{self.name} ...")
 
     def _run(self):
-        # time.sleep(5)
         self._run_begin()
         self._running()
         self._run_end()
-        # exit(0)
     
     def _run_end(self):
-        logging.warn(f"_run_end: {self.__class__.__name__}")
+        logging.debug(f"{self.name} ...")
         # self.is_running = False
         # self._terminate_lock.wait()
         while not self._terminate_lock.is_set():
@@ -103,44 +122,33 @@ class HolonicAgent(Agent) :
         self._stop_mqtt()
 
     def _start_mqtt(self):
-        logging.info(f"start MQTT")
-        self.mqtt_client = mqtt.Client()
-        self.mqtt_client.on_connect = self._on_connect
-        self.mqtt_client.on_message = self._on_message
+        logging.debug(f"{self.name} ...")
+        self._mqtt_client = mqtt.Client()
+        self._mqtt_client.on_connect = self._on_connect
+        self._mqtt_client.on_message = self._on_message
         if config.mqtt_username:
-            self.mqtt_client.username_pw_set(config.mqtt_username, config.mqtt_password)
-        self.mqtt_client.connect(config.mqtt_address, config.mqtt_port, config.mqtt_keepalive)
-        self.mqtt_client.loop_start()
+            self._mqtt_client.username_pw_set(config.mqtt_username, config.mqtt_password)
+        self._mqtt_client.connect(config.mqtt_address, config.mqtt_port, config.mqtt_keepalive)
+        self._mqtt_client.loop_start()
 
     def _stop_mqtt(self):
-        logging.warn("_stop_mqtt")
-        self.mqtt_client.disconnect()
-        self.mqtt_client.loop_stop()
+        logging.debug(f"{self.name} ...")
+        self._mqtt_client.disconnect()
+        self._mqtt_client.loop_stop()
 
     def publish(self, topic, payload):
-        self.mqtt_client.publish(topic, payload)
+        self._mqtt_client.publish(topic, payload)
         
-    def start(self):
-        self.agent_proc = Process(target=self._run)
-        self.agent_proc.start()
 
-        for a in self.head_agents:
-            logging.info(f"head: {a.__module__} start")
-            a.start()
-        for a in self.body_agents:
-            logging.info(f"body: {a.__module__} start")
-            a.start()
-        
     def terminate(self):
-        for a in self.head_agents:
-            logging.info(f"head: {a.__module__} terminate")
-            a.terminate()
-        for a in self.body_agents:
-            logging.info(f"body: {a.__module__} terminate")
-            a.terminate()
+        logging.debug(f"{self.name} ...")
 
-        print(f"terminating: {self.__class__.__name__}")
-        if self.agent_proc.is_alive():            
-            # print(self.agent_proc)
-            os.kill(self.agent_proc.pid, signal.SIGINT)
-            self.agent_proc.join()
+        for a in self.head_agents:
+            name = a.__class__.__name__
+            self.publish(topic='terminate', payload=name)
+
+        for a in self.body_agents:
+            name = a.__class__.__name__
+            self.publish(topic='terminate', payload=name)
+
+        self._terminate_lock.set()
