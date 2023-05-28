@@ -3,10 +3,7 @@ import threading
 
 import openai
 
-# openai.api_key = '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'
-# openai.api_key = "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"
-# openai.api_key = "openai api key"
-
+import lab_config
 
 def set_openai_api_key(key):
     print(f"set_openai_api_key: {key}")
@@ -160,20 +157,13 @@ def understand(prompt):
     for thread in threads:
         thread.join()
 
-    # subject = parse_subject(prompt)
-    # predict = parse_predict(prompt)
-    # obj = parse_object(prompt)
     return (_subject, _predict, _object)
 
 
 if __name__ == '__main__':
     print(f'***** {__file__} Start *****\n')
 
-    # completion = test_chat4("I'm going to the convenience store")
-    # print(f"completion: {completion['choices'][0]['message']['content']}")
-
-    # completion = test_chat4("Open the door.")
-    # print(f"completion: {completion['choices'][0]['message']['content']}")
+    set_openai_api_key(lab_config.openai_api_key)
 
     prompt = "I want to eat McDonald's for dinner"
     prompt = "我要吃麥當勞。"

@@ -4,7 +4,7 @@ import re
 
 import openai
 
-openai.api_key = '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'
+openai.api_key = 'xxx'
 
 def test_chat():
     completion = openai.ChatCompletion.create(
