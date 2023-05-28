@@ -128,6 +128,7 @@ class HolonicAgent(Agent) :
         self._mqtt_client.on_message = self._on_message
         if config.mqtt_username:
             self._mqtt_client.username_pw_set(config.mqtt_username, config.mqtt_password)
+        print(f"addr:{config.mqtt_address} port:{config.mqtt_port} keep:{config.mqtt_keepalive}")
         self._mqtt_client.connect(config.mqtt_address, config.mqtt_port, config.mqtt_keepalive)
         self._mqtt_client.loop_start()
 
