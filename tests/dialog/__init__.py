@@ -1,5 +1,6 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import multiprocessing
 import signal
 
 import logging
@@ -47,6 +48,8 @@ if __name__ == '__main__':
     cfg.log_level = dialog_config.log_level
     cfg.log_dir = dialog_config.log_dir    
     os.environ["OPENAI_API_KEY"] = dialog_config.openai_api_key
+
+    multiprocessing.set_start_method('spawn')
 
     a = DialogSystem(cfg)
     a.start()

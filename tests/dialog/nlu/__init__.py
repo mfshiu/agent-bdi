@@ -26,6 +26,7 @@ class Nlu(HolonicAgent):
             logging.debug(f"{self.name} heared '{data}'")
             triplet = self._understand(data)
             logging.info(f"Understand: {triplet}")
+            self.publish("dialog.nlu.triplet", str(triplet))
         super()._on_topic(topic, data)
 
 

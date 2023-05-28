@@ -1,7 +1,9 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from datetime import datetime as dt
+import multiprocessing
 import queue
+import signal
 import time
 
 import logging
@@ -9,9 +11,13 @@ import whisper
 import torch
 
 from src.holon.HolonicAgent import HolonicAgent
+from src.holon import config
+import dialog_config
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # whisper.DecodingOptions(language="zh")
+# whisper_model = whisper.load_model("tiny", device=device)
+# whisper_model = whisper.load_model("base", device=device)
 whisper_model = whisper.load_model("small", device=device)
 # whisper_model = whisper.load_model("medium", device=device)
 # whisper_model = whisper.load_model("large", device=device)
@@ -29,6 +35,9 @@ class AudioInput(HolonicAgent):
 
     def _on_message(self, client, db, msg):
         if "record_wave" == msg.topic:
+            # print(f"aa")
+            # result = whisper_model.transcribe('tests/dialog/record-0529-0617-27.wav')
+            # print(f"qq {result}")
             # logging.debug(f"wave_path:{data}")
             wave_path = dt.now().strftime("./tests/_output2/record-%m%d-%H%M-%S.wav")
             with open(wave_path, "wb") as file:
@@ -62,14 +71,16 @@ class AudioInput(HolonicAgent):
     def _running(self):
         while self.is_running():
             if self.wave_queue.empty():
-                print(".", end='')
+                # print(".", end='')
                 time.sleep(.1)
                 continue
             try:
                 wave_path = self.wave_queue.get()
+                # wave_path = "./tests/dialog/record1.wav"
                 logging.debug(f"transcribing wave_path:{wave_path}")
                 result = whisper_model.transcribe(wave_path)
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
+                # result = {"text": "I would like to dinner"}
                 transcribed_text = result["text"]
                 logging.debug(f"transcribed_text: {transcribed_text}")
                 self.publish("guide.hearing.heared_text", transcribed_text)        
@@ -85,11 +96,27 @@ class AudioInput(HolonicAgent):
                 _, exc_value, _ = sys.exc_info()
                 logging.error(exc_value)
 
+    # def start(self):
+    #     super().start()
 
 if __name__ == '__main__':
     logging.info('***** AudioInput start *****')
-    result = whisper_model.transcribe('tests/dialog/record-0529-0617-27.wav')
-    print(result)
+    # result = whisper_model.transcribe('tests/dialog/record-0529-0617-27.wav')
+    # print(result)
     
-    # a = AudioInput()
-    # a.start()
+    def signal_handler(signal, frame):
+        print("signal_handler")
+    signal.signal(signal.SIGINT, signal_handler)
+
+    cfg = config()
+    cfg.mqtt_address = dialog_config.mqtt_address
+    cfg.mqtt_port = dialog_config.mqtt_port
+    cfg.mqtt_keepalive = dialog_config.mqtt_keepalive
+    cfg.mqtt_username = dialog_config.mqtt_username
+    cfg.mqtt_password = dialog_config.mqtt_password
+    cfg.log_level = dialog_config.log_level
+    cfg.log_dir = dialog_config.log_dir    
+    os.environ["OPENAI_API_KEY"] = dialog_config.openai_api_key
+
+    a = AudioInput(cfg)
+    a.start()
