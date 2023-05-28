@@ -1,5 +1,5 @@
 import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from datetime import datetime as dt
 import queue
 import time
@@ -61,6 +61,7 @@ class AudioInput(HolonicAgent):
     def _running(self):
         while self.is_running():
             if self.wave_queue.empty():
+                print(".", end='')
                 time.sleep(.1)
                 continue
             try:
@@ -83,6 +84,9 @@ class AudioInput(HolonicAgent):
 
 
 if __name__ == '__main__':
-    logging.info('***** VoiceToText start *****')
-    a = VoiceToText()
-    a.start()
+    logging.info('***** AudioInput start *****')
+    result = whisper_model.transcribe('./tests/dialog/record1.wav')
+    print(result)
+    
+    # a = AudioInput()
+    # a.start()
