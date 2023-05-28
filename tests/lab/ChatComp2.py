@@ -3,7 +3,7 @@ import threading
 
 import openai
 
-import lab_config
+import tests.lab.lab_config
 
 def set_openai_api_key(key):
     print(f"set_openai_api_key: {key}")
