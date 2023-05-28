@@ -14,6 +14,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # whisper.DecodingOptions(language="zh")
 whisper_model = whisper.load_model("small", device=device)
 # whisper_model = whisper.load_model("medium", device=device)
+# whisper_model = whisper.load_model("large", device=device)
 
 class AudioInput(HolonicAgent):
     def __init__(self, cfg):
@@ -29,7 +30,7 @@ class AudioInput(HolonicAgent):
     def _on_message(self, client, db, msg):
         if "record_wave" == msg.topic:
             # logging.debug(f"wave_path:{data}")
-            wave_path = dt.now().strftime("tests/_output2/record-%m%d-%H%M-%S.wav")
+            wave_path = dt.now().strftime("./tests/_output2/record-%m%d-%H%M-%S.wav")
             with open(wave_path, "wb") as file:
                 file.write(msg.payload)
             logging.debug("File received and saved.")
@@ -66,9 +67,11 @@ class AudioInput(HolonicAgent):
                 continue
             try:
                 wave_path = self.wave_queue.get()
+                logging.debug(f"transcribing wave_path:{wave_path}")
                 result = whisper_model.transcribe(wave_path)
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 transcribed_text = result["text"]
+                logging.debug(f"transcribed_text: {transcribed_text}")
                 self.publish("guide.hearing.heared_text", transcribed_text)        
                 logging.info(f">>> \033[33m{transcribed_text}\033[0m")
                 if os.path.exists(wave_path):
@@ -85,7 +88,7 @@ class AudioInput(HolonicAgent):
 
 if __name__ == '__main__':
     logging.info('***** AudioInput start *****')
-    result = whisper_model.transcribe('./tests/dialog/record1.wav')
+    result = whisper_model.transcribe('tests/dialog/record-0529-0617-27.wav')
     print(result)
     
     # a = AudioInput()
