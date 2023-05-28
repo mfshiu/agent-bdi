@@ -49,7 +49,7 @@ class VoiceToText(HolonicAgent) :
                 result = whisper_model.transcribe(wave_path)
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 transcribed_text = result["text"]
-                self.publish("record_text", transcribed_text)        
+                self.publish("guide.hearing.heared_text", transcribed_text)        
                 logging.info(f">>> \033[33m{transcribed_text}\033[0m")
                 if os.path.exists(wave_path):
                     os.remove(wave_path)

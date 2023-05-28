@@ -71,7 +71,7 @@ class HolonicAgent(Agent) :
 
 
     def _on_topic(self, topic, data):
-        logging.debug(f"{self.name} topic:{topic}, data:{data}")
+        # logging.debug(f"{self.name} topic:{topic}, data:{data}")
 
         if "terminate" == topic:
             if data:

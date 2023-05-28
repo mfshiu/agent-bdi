@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import signal
 import time
 
-from GuideMain import GuideMain
+from guide import GuideMain
 # import Helper
 
 if __name__ == '__main__':
