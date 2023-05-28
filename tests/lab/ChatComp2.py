@@ -1,11 +1,17 @@
 #Note: you need to be using OpenAI Python v0.27.0 for the code below to work
-import ast
-import re
 import threading
 
 import openai
 
-openai.api_key = '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'
+# openai.api_key = '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'
+# openai.api_key = "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"
+# openai.api_key = "openai api key"
+
+
+def set_openai_api_key(key):
+    print(f"set_openai_api_key: {key}")
+    openai.api_key = key
+
 
 def parse_to_triplet(user_prompt):
     print(f"parse_to_triplet: {user_prompt}")
@@ -43,6 +49,8 @@ def understand(prompt):
     global _subject
     global _predict
     global _object
+
+    print(f"openai.api_key: {openai.api_key}")
 
 
     def _process_result(result):

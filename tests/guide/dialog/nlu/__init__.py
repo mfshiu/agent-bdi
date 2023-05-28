@@ -7,6 +7,7 @@ from src.holon import Helper
 from src.holon.HolonicAgent import HolonicAgent
 from tests.lab import ChatComp2 as chatgpt
 # import DialogSession
+import config
 
 class Nlu(HolonicAgent) :
     def __init__(self):
@@ -16,6 +17,7 @@ class Nlu(HolonicAgent) :
 
     def _on_connect(self, client, userdata, flags, rc):
         client.subscribe("guide.hearing.heared_text")
+        chatgpt.set_openai_api_key(config.openai_api_key)
         super()._on_connect(client, userdata, flags, rc)
 
 
@@ -32,6 +34,7 @@ class Nlu(HolonicAgent) :
             triplet = chatgpt.understand(sentence)
         except Exception as ex:
             triplet = None
+            logging.exception(f"Error: {str(ex)}")
         return triplet
 
 

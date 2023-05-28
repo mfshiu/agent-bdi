@@ -130,3 +130,5 @@ dmypy.json
 
 _log/
 _output/
+tests/lab/lab_config.py
+tests/guide/config.py

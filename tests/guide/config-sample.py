@@ -7,3 +7,5 @@ mqtt_username = "eric"
 mqtt_password = "eric123"
 
 log_level = logging.DEBUG
+
+openai_api_key = 'your openai api key'
