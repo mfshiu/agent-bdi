@@ -2,10 +2,10 @@ from multiprocessing import Process
 import paho.mqtt.client as mqtt
 from holon.HolonicAgent import HolonicAgent
 
-class Heart(HolonicAgent) :
+class Heart(HolonicAgent):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
     # def _run(self):
     #     print(f"  run: {self.__class__.__name__}")

@@ -5,6 +5,7 @@ import logging
 import signal
 
 from src.holon import Helper
+from src.holon import config
 from src.holon.HolonicAgent import HolonicAgent
 
 from src.holon.HolonicAgent import HolonicAgent
@@ -12,15 +13,16 @@ from src.holon.HolonicAgent import HolonicAgent
 from hearing import Hearing
 # from voice.Voice import Voice
 # from navi.NaviSystem import NaviSystem
-from dialog import DialogSystem
+# from dialog import DialogSystem
+import guide_config
 
 class GuideMain(HolonicAgent):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, cfg):
+        super().__init__(cfg)
         # self.body_agents.append(NaviSystem())
-        self.body_agents.append(DialogSystem())
+        # self.body_agents.append(DialogSystem(cfg))
         # self.head_agents.append(Visual())
-        self.head_agents.append(Hearing())
+        self.head_agents.append(Hearing(cfg))
         # self.head_agents.append(Voice())
 
 
@@ -47,7 +49,17 @@ if __name__ == '__main__':
         print("signal_handler")
     signal.signal(signal.SIGINT, signal_handler)
 
-    a = GuideMain()
+    cfg = config()
+    cfg.mqtt_address = guide_config.mqtt_address
+    cfg.mqtt_port = guide_config.mqtt_port
+    cfg.mqtt_keepalive = guide_config.mqtt_keepalive
+    cfg.mqtt_username = guide_config.mqtt_username
+    cfg.mqtt_password = guide_config.mqtt_password
+    cfg.log_level = guide_config.log_level
+    cfg.log_dir = guide_config.log_dir    
+    os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
+
+    a = GuideMain(cfg)
     a.start()
 
     # time.sleep(5)

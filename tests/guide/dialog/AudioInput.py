@@ -1,5 +1,6 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from datetime import datetime as dt
 import queue
 import time
 
@@ -14,23 +15,41 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 whisper_model = whisper.load_model("small", device=device)
 # whisper_model = whisper.load_model("medium", device=device)
 
-class VoiceToText(HolonicAgent):
+class AudioInput(HolonicAgent):
     def __init__(self, cfg):
         super().__init__(cfg)
 
 
     def _on_connect(self, client, userdata, flags, rc):
-        client.subscribe("record_file")
+        client.subscribe("record_wave")
 
         super()._on_connect(client, userdata, flags, rc)
 
 
-    def _on_topic(self, topic, data):
-        if "record_file" == topic:
-            logging.debug(f"wave_path:{data}")
-            self.wave_queue.put(data)
+    def _on_message(self, client, db, msg):
+        if "record_wave" == msg.topic:
+            # logging.debug(f"wave_path:{data}")
+            wave_path = dt.now().strftime("tests/_output2/record-%m%d-%H%M-%S.wav")
+            with open(wave_path, "wb") as file:
+                file.write(msg.payload)
+            logging.debug("File received and saved.")
+            self.wave_queue.put(wave_path)
+        else:
+            super()._on_message(client, db, msg)
 
-        super()._on_topic(topic, data)
+        # super()._on_topic(topic, data)
+
+
+    # def _on_topic(self, topic, data):
+    #     if "record_wave" == topic:
+    #         # logging.debug(f"wave_path:{data}")
+    #         wave_path = dt.now().strftime("tests/_output2/record-%m%d-%H%M-%S.wav")
+    #         with open(wave_path, "wb") as file:
+    #             file.write(data.payload)
+    #         logging.debug("File received and saved.")
+    #         self.wave_queue.put(wave_path)
+
+    #     super()._on_topic(topic, data)
 
 
     def _run_begin(self):

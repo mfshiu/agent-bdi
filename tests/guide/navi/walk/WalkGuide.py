@@ -3,9 +3,9 @@ from navi.walk.RoadDetect import RoadDetect
 from holon.HolonicAgent import HolonicAgent
 
 class WalkGuide(HolonicAgent):
-    def __init__(self):
+    def __init__(self, cfg):
         super().__init__()
-        self.body_agents.append(KanbanDetect())
-        self.body_agents.append(RoadDetect())
+        self.body_agents.append(KanbanDetect(cfg))
+        self.body_agents.append(RoadDetect(cfg))
 
 

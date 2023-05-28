@@ -20,7 +20,7 @@ from holon.HolonicIntention import HolonicIntention
 from holon import config
 
 class HolonicAgent(Agent) :
-    def __init__(self, b:Blackboard=None, d:HolonicDesire=None, i: HolonicIntention=None):
+    def __init__(self, cfg:config=None, b:Blackboard=None, d:HolonicDesire=None, i: HolonicIntention=None):
         b = b or Blackboard()
         d = d or HolonicDesire()
         i = i or HolonicIntention()
@@ -30,13 +30,14 @@ class HolonicAgent(Agent) :
         self.run_interval_seconds = 1
         self._mqtt_client = None
         self._agent_proc = None
+        self._config = cfg if cfg else config()
         self.name = f'<{self.__class__.__name__}>'
 
 
     def start(self):
         logging.info(f"{self.name} ...")
 
-        self._agent_proc = Process(target=self._run)
+        self._agent_proc = Process(target=self._run, args=(self._config,))
         self._agent_proc.start()
 
         for a in self.head_agents:
@@ -82,7 +83,7 @@ class HolonicAgent(Agent) :
 
 
     def _run_begin(self):
-        Helper.init_logging()
+        Helper.init_logging(self._config.log_dir, self._config.log_level)
         logging.debug(f"{self.name} ...")
         
         def signal_handler(signal, frame):
@@ -108,7 +109,8 @@ class HolonicAgent(Agent) :
     def _running(self):
         logging.debug(f"{self.name} ...")
 
-    def _run(self):
+    def _run(self, cfg:config):
+        self._config = cfg
         self._run_begin()
         self._running()
         self._run_end()
@@ -126,10 +128,11 @@ class HolonicAgent(Agent) :
         self._mqtt_client = mqtt.Client()
         self._mqtt_client.on_connect = self._on_connect
         self._mqtt_client.on_message = self._on_message
-        if config.mqtt_username:
-            self._mqtt_client.username_pw_set(config.mqtt_username, config.mqtt_password)
-        print(f"addr:{config.mqtt_address} port:{config.mqtt_port} keep:{config.mqtt_keepalive}")
-        self._mqtt_client.connect(config.mqtt_address, config.mqtt_port, config.mqtt_keepalive)
+        cfg = self._config
+        if cfg.mqtt_username:
+            self._mqtt_client.username_pw_set(cfg.mqtt_username, cfg.mqtt_password)
+        logging.debug(f"addr:{cfg.mqtt_address} port:{cfg.mqtt_port} keep:{cfg.mqtt_keepalive}")
+        self._mqtt_client.connect(cfg.mqtt_address, cfg.mqtt_port, cfg.mqtt_keepalive)
         self._mqtt_client.loop_start()
 
     def _stop_mqtt(self):

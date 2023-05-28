@@ -20,9 +20,9 @@ RECORD_SECONDS = 5
 MAX_RECORD_SECONDS = 10 * 60
 SILENCE_THRESHOLD = (RATE // CHUNK) * 0.28
 
-class Microphone(HolonicAgent) :
-    def __init__(self):
-        super().__init__()
+class Microphone(HolonicAgent):
+    def __init__(self, cfg=None):
+        super().__init__(cfg)
 
 
     def _record(self):
@@ -155,7 +155,9 @@ class Microphone(HolonicAgent) :
                 wf.writeframes(b''.join(frames))
                 wf.close()
             wave_path = dt.now().strftime("tests/_output/record-%m%d-%H%M-%S.wav")
-            threading.Thread(target=write_wave_file, args=(wave_path, b''.join(frames),)).start()
+            t = threading.Thread(target=write_wave_file, args=(wave_path, b''.join(frames),))
+            t.start()
+            t.join()
             # write_wave_file(filepath, b''.join(frames))
 
         return wave_path
@@ -163,10 +165,17 @@ class Microphone(HolonicAgent) :
 
     def _running(self):
         while self.is_running():
-            # filepath = self._record()
-            filepath = self._record2()
-            if filepath:
-                self.publish("record_file", filepath)
+            try:
+                # filepath = self._record()
+                filepath = self._record2()
+                if filepath:
+                    with open(filepath, "rb") as file:
+                        file_content = file.read()
+                    self.publish("record_wave", file_content)
+                    os.remove(filepath)
+                    # self.publish("record_file", filepath)
+            except Exception as ex:
+                logging.exception(ex)
 
 
 if __name__ == '__main__':

@@ -3,11 +3,11 @@ from holon.HolonicAgent import HolonicAgent
 from navi.RouteFind import RouteFind
 from navi.walk.WalkGuide import WalkGuide
 
-class NaviSystem(HolonicAgent) :
-    def __init__(self):
-        super().__init__()
-        self.head_agents.append(VisualInput())
-        self.body_agents.append(WalkGuide())
-        self.body_agents.append(RouteFind())
+class NaviSystem(HolonicAgent):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.head_agents.append(VisualInput(cfg))
+        self.body_agents.append(WalkGuide(cfg))
+        self.body_agents.append(RouteFind(cfg))
 
 
