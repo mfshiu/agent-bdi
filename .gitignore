@@ -134,3 +134,4 @@ _output2/
 tests/lab/lab_config.py
 tests/guide/config.py
 tests/guide/guide_config.py
+tests/dialog/dialog_config.py
