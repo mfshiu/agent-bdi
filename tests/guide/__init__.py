@@ -28,6 +28,7 @@ class GuideMain(HolonicAgent):
 
     def _on_connect(self, client, userdata, flags, rc):
         client.subscribe("guide.hearing.heared_text")
+        client.subscribe("dialog.nlu.triplet")
 
         super()._on_connect(client, userdata, flags, rc)
 
@@ -36,6 +37,8 @@ class GuideMain(HolonicAgent):
         if "guide.hearing.heared_text" == topic:
             if '系統關機' in data:
                 self.terminate()
+        elif "dialog.nlu.triplet" == topic:
+            logging.info(f'### {data} ###')
 
         super()._on_topic(topic, data)
 
