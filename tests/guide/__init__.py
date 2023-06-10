@@ -12,18 +12,18 @@ from src.holon.HolonicAgent import HolonicAgent
 # from visual.Visual import Visual
 from hearing import Hearing
 # from voice.Voice import Voice
-# from navi.NaviSystem import NaviSystem
+from navi import Navigator
 # from dialog import DialogSystem
 import guide_config
 
 class GuideMain(HolonicAgent):
     def __init__(self, cfg):
         super().__init__(cfg)
-        # self.body_agents.append(NaviSystem())
         # self.body_agents.append(DialogSystem(cfg))
         # self.head_agents.append(Visual())
         self.head_agents.append(Hearing(cfg))
         # self.head_agents.append(Voice())
+        self.body_agents.append(Navigator(cfg))
 
 
     def _on_connect(self, client, userdata, flags, rc):

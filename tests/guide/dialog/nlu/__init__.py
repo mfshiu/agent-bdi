@@ -25,6 +25,7 @@ class Nlu(HolonicAgent):
         if "guide.hearing.heared_text" == topic:
             logging.debug(f"{self.name} heared '{data}'")
             triplet = self._understand(data)
+            self.publish("dialog.nlu.triplet", str(triplet))
             logging.info(f"Understand: {triplet}")
         super()._on_topic(topic, data)
 

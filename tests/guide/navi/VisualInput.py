@@ -1,5 +1,5 @@
-from holon.HolonicAgent import HolonicAgent
-from navi.walk.WalkGuide import WalkGuide
+from src.holon.HolonicAgent import HolonicAgent
+
 
 class VisualInput(HolonicAgent):
     def __init__(self, cfg):

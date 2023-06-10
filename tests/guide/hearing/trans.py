@@ -1,5 +1,6 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from datetime import datetime as dt
 import queue
 import time
 
@@ -14,21 +15,24 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 whisper_model = whisper.load_model("small", device=device)
 # whisper_model = whisper.load_model("medium", device=device)
 
-class VoiceToText(HolonicAgent):
+class Transcriptionist(HolonicAgent):
     def __init__(self, cfg):
         super().__init__(cfg)
 
 
     def _on_connect(self, client, userdata, flags, rc):
-        client.subscribe("record_file")
+        client.subscribe("hearing.voice")
 
         super()._on_connect(client, userdata, flags, rc)
 
 
     def _on_topic(self, topic, data):
-        if "record_file" == topic:
-            logging.debug(f"wave_path:{data}")
-            self.wave_queue.put(data)
+        if "hearing.voice" == topic:
+            # logging.debug(f"wave_path:{data}")
+            wave_path = dt.now().strftime("tests/_input/voice-%m%d-%H%M-%S.wav")
+            with open(wave_path, "wb") as file:
+                file.write(data)
+            self.wave_queue.put(wave_path)
 
         super()._on_topic(topic, data)
 
@@ -49,7 +53,7 @@ class VoiceToText(HolonicAgent):
                 result = whisper_model.transcribe(wave_path)
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 transcribed_text = result["text"]
-                self.publish("guide.hearing.heared_text", transcribed_text)        
+                self.publish("hearing.trans.text", transcribed_text)        
                 logging.info(f">>> \033[33m{transcribed_text}\033[0m")
                 if os.path.exists(wave_path):
                     os.remove(wave_path)
@@ -65,5 +69,5 @@ class VoiceToText(HolonicAgent):
 
 if __name__ == '__main__':
     logging.info('***** VoiceToText start *****')
-    a = VoiceToText()
+    a = Transcriptionist()
     a.start()

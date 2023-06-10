@@ -35,8 +35,6 @@ class HolonicAgent(Agent) :
 
 
     def start(self):
-        logging.info(f"{self.name} ...")
-
         self._agent_proc = Process(target=self._run, args=(self._config,))
         self._agent_proc.start()
 
@@ -67,8 +65,11 @@ class HolonicAgent(Agent) :
 
     def _on_message(self, client, db, msg):
         data = msg.payload.decode('utf-8', 'ignore')
-
         self._on_topic(msg.topic, data)
+        # try:
+        #     self._on_topic(msg.topic, data)
+        # except Exception as ex:
+        #     logging.exception(f'{ex}')
 
 
     def _on_topic(self, topic, data):
@@ -135,13 +136,17 @@ class HolonicAgent(Agent) :
         self._mqtt_client.connect(cfg.mqtt_address, cfg.mqtt_port, cfg.mqtt_keepalive)
         self._mqtt_client.loop_start()
 
+
     def _stop_mqtt(self):
         logging.debug(f"{self.name} ...")
         self._mqtt_client.disconnect()
         self._mqtt_client.loop_stop()
 
+
     def publish(self, topic, payload):
-        self._mqtt_client.publish(topic, payload)
+        # logging.debug(f'{str(self._mqtt_client.socket())}, topic:{topic}, payload:{payload}')
+        ret = self._mqtt_client.publish(topic, payload)
+        # logging.debug(f'ret: {str(ret)}')
         
 
     def terminate(self):

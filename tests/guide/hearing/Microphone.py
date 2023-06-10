@@ -3,6 +3,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 
 from datetime import datetime as dt
 import threading
+import time
 
 import logging
 import numpy as np
@@ -74,7 +75,7 @@ class Microphone(HolonicAgent):
         audio_mean = 0 if len(data) == 0 else sum([int(x) for x in data]) // len(data)
         # if audio_mean >= 200:
         #     print(f"audio_mean: {audio_mean}")
-        return audio_mean < 200
+        return audio_mean < 50
     
 
     def __wait_voice(self, audio_stream):
@@ -147,18 +148,18 @@ class Microphone(HolonicAgent):
         wave_path = None
         if frames and len(frames) >= SILENCE_THRESHOLD//2 :
             def write_wave_file(wave_path, wave_data):
-                logging.debug("Write to file...")
+                logging.debug(f"Write to file: {wave_path}...")
                 wf = wave.open(wave_path, 'wb')
                 wf.setnchannels(CHANNELS)
                 wf.setsampwidth(audio.get_sample_size(FORMAT))
                 wf.setframerate(RATE)
                 wf.writeframes(b''.join(frames))
                 wf.close()
+                self.publish("microphone.wave_path", wave_path)
             wave_path = dt.now().strftime("tests/_output/record-%m%d-%H%M-%S.wav")
-            t = threading.Thread(target=write_wave_file, args=(wave_path, b''.join(frames),))
-            t.start()
-            t.join()
-            # write_wave_file(filepath, b''.join(frames))
+            threading.Thread(target=write_wave_file, args=(wave_path, b''.join(frames),)).start()
+            # self.publish("microphone.wave_path", wave_path)
+            # write_wave_file(wave_path, b''.join(frames))
 
         return wave_path
 
@@ -168,12 +169,13 @@ class Microphone(HolonicAgent):
             try:
                 # filepath = self._record()
                 filepath = self._record2()
-                if filepath:
-                    with open(filepath, "rb") as file:
-                        file_content = file.read()
-                    self.publish("record_wave", file_content)
-                    os.remove(filepath)
-                    # self.publish("record_file", filepath)
+                # if filepath:
+                    # with open(filepath, "rb") as file:
+                    #     file_content = file.read()
+                    # self.publish("hearing.microphone.voice", file_content)
+                    # os.remove(filepath)
+                    # logging.debug(f'Publish: microphone.wave_path: {filepath}')
+                    # self.publish("microphone.wave_path", filepath)
             except Exception as ex:
                 logging.exception(ex)
 
