@@ -129,6 +129,7 @@ dmypy.json
 .pyre/
 
 _log/
+_input/
 _output/
 _output2/
 tests/lab/lab_config.py
