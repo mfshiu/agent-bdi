@@ -1,4 +1,5 @@
 #Note: you need to be using OpenAI Python v0.27.0 for the code below to work
+import os
 import threading
 
 import openai
@@ -183,7 +184,7 @@ def understand(prompt):
 if __name__ == '__main__1':
     print(f'***** {__file__} Start *****\n')
 
-    set_openai_api_key("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")
+    set_openai_api_key(os.getenv('OPENAI_API_KEY'))
 
     prompt = "Yes, I like it."
     prompt = "No, I don't like it."
@@ -208,7 +209,7 @@ if __name__ == '__main__1':
 if __name__ == '__main__':
     print(f'***** {__file__} Start *****\n')
 
-    set_openai_api_key("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")
+    set_openai_api_key(os.getenv('OPENAI_API_KEY'))
 
     prompt = "I want to eat McDonald's for dinner"
     prompt = "我要吃麥當勞。"
