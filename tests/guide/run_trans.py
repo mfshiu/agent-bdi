@@ -21,7 +21,7 @@ from hearing.trans import Transcriptionist
 if __name__ == '__main__':
     # Helper.init_logging()
     # logging.info('***** Main start *****')
-    print('***** GuideMain start *****')
+    print('***** RunTrans start *****')
 
     def signal_handler(signal, frame):
         print("signal_handler")
@@ -37,6 +37,7 @@ if __name__ == '__main__':
     cfg.log_dir = guide_config.log_dir    
     os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
 
+    print(f'addr: {cfg.mqtt_address}')
     a = Transcriptionist(cfg)
     a.start()
 
