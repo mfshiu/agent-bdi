@@ -6,7 +6,7 @@ import logging
 
 from src.holon import Helper
 from src.holon.HolonicAgent import HolonicAgent
-from tests.lab import ChatComp2 as chatgpt
+import dialog.nlu.chatgpt as chatgpt
 # import DialogSession
 
 class Nlu(HolonicAgent):
@@ -16,13 +16,13 @@ class Nlu(HolonicAgent):
 
 
     def _on_connect(self, client, userdata, flags, rc):
-        client.subscribe("guide.hearing.heared_text")
+        client.subscribe("hearing.trans.text")
         chatgpt.set_openai_api_key(os.getenv('OPENAI_API_KEY'))
         super()._on_connect(client, userdata, flags, rc)
 
 
     def _on_topic(self, topic, data):
-        if "guide.hearing.heared_text" == topic:
+        if "hearing.trans.text" == topic:
             logging.debug(f"{self.name} heared '{data}'")
             triplet = self._understand(data)
             self.publish("dialog.nlu.triplet", str(triplet))

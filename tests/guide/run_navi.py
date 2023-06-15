@@ -13,40 +13,15 @@ from src.holon.HolonicAgent import HolonicAgent
 from hearing import Hearing
 # from voice.Voice import Voice
 from navi import Navigator
-from dialog import DialogSystem
+# from dialog import DialogSystem
 import guide_config
-
-class GuideMain(HolonicAgent):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-        self.body_agents.append(DialogSystem(cfg))
-        # self.head_agents.append(Visual())
-        self.head_agents.append(Hearing(cfg))
-        # self.head_agents.append(Voice())
-        self.body_agents.append(Navigator(cfg))
-
-
-    def _on_connect(self, client, userdata, flags, rc):
-        client.subscribe("guide.hearing.heared_text")
-        client.subscribe("dialog.nlu.triplet")
-
-        super()._on_connect(client, userdata, flags, rc)
-
-
-    def _on_topic(self, topic, data):
-        if "guide.hearing.heared_text" == topic:
-            if '系統關機' in data:
-                self.terminate()
-        # elif "dialog.nlu.triplet" == topic:
-        #     logging.info(f'### {data} ###')
-
-        super()._on_topic(topic, data)
+# from hearing.trans import Transcriptionist
 
 
 if __name__ == '__main__':
     # Helper.init_logging()
     # logging.info('***** Main start *****')
-    print('***** GuideMain start *****')
+    print('***** Navi start *****')
 
     def signal_handler(signal, frame):
         print("signal_handler")
@@ -62,7 +37,7 @@ if __name__ == '__main__':
     cfg.log_dir = guide_config.log_dir    
     os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
 
-    a = GuideMain(cfg)
+    a = Navigator(cfg)
     a.start()
 
     # time.sleep(5)
