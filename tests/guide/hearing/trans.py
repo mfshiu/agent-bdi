@@ -68,6 +68,7 @@ class Transcriptionist(HolonicAgent):
                 result = whisper_model.transcribe(wave_path)
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 transcribed_text = result["text"]
+                print(f'running addr: {self._config.mqtt_address}')
                 self.publish("hearing.trans.text", transcribed_text)        
                 logging.info(f">>> \033[33m{transcribed_text}\033[0m")
                 if os.path.exists(wave_path):
@@ -86,14 +87,14 @@ if __name__ == '__main__':
     logging.info('***** VoiceToText start *****')
 
     cfg = config()
-    # cfg.mqtt_address = guide_config.mqtt_address
-    # cfg.mqtt_port = guide_config.mqtt_port
-    # cfg.mqtt_keepalive = guide_config.mqtt_keepalive
-    # cfg.mqtt_username = guide_config.mqtt_username
-    # cfg.mqtt_password = guide_config.mqtt_password
-    # cfg.log_level = guide_config.log_level
-    # cfg.log_dir = guide_config.log_dir    
-    # os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
+    cfg.mqtt_address = guide_config.mqtt_address
+    cfg.mqtt_port = guide_config.mqtt_port
+    cfg.mqtt_keepalive = guide_config.mqtt_keepalive
+    cfg.mqtt_username = guide_config.mqtt_username
+    cfg.mqtt_password = guide_config.mqtt_password
+    cfg.log_level = guide_config.log_level
+    cfg.log_dir = guide_config.log_dir    
+    os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
 
     a = Transcriptionist(cfg)
     a.start()
