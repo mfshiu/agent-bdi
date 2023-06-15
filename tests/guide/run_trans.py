@@ -37,7 +37,6 @@ if __name__ == '__main__':
     cfg.log_dir = guide_config.log_dir    
     os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
 
-    print(f'addr: {cfg.mqtt_address}')
     a = Transcriptionist(cfg)
     a.start()
 
