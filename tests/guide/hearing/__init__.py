@@ -9,7 +9,7 @@ from src.holon import config
 from src.holon.HolonicAgent import HolonicAgent
 from hearing.microphone import Microphone
 # from hearing.VoiceToText import VoiceToText
-# from tests.guide.hearing.Microphone import Microphone
+# from tests.guide.hearing.microphone import Microphone
 # from tests.guide.hearing.VoiceToText import VoiceToText
 
 class Hearing(HolonicAgent):
