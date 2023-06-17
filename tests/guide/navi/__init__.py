@@ -3,6 +3,7 @@
 
 import ast
 import logging
+import threading
 
 # import openai
 
@@ -15,6 +16,7 @@ from navi.walk.WalkGuide import WalkGuide
 class Navigator(HolonicAgent):
     def __init__(self, cfg):
         super().__init__(cfg)
+        self.state = 0
         # self.head_agents.append(VisualInput(cfg))
         # self.body_agents.append(WalkGuide(cfg))
         # self.body_agents.append(RouteFind(cfg))
@@ -30,15 +32,50 @@ class Navigator(HolonicAgent):
         logging.debug(f"predict: {predict}")
         result = "go" == predict
         return result
+    
+
+    def __speak(self, sentence):
+        logging.debug(f"Say: '{sentence}'")
+        self.publish('voice.what_to_say', sentence)
+
+
+    def __set_state(self, new_state):
+        self.state = new_state
+        logging.debug(f"New state: {new_state}")
+    
+
+    def __process_navi(self, triplet):
+        logging.debug(f"state: {self.state}, triplet: '{triplet}'")
+
+        if self.state == 0:
+            if self.__is_go(triplet[1]):
+                if triplet[2] == 'park':
+                    self.__speak("How about going to Dragon Park?")
+                    self.__set_state(1)
+                else:
+                    self.__speak("I can only take you to a park.")
+            else:
+                self.__speak("Where to go?")
+        elif self.state == 1:
+            if triplet[3]:
+                self.__speak("OK, let's go.")
+                threading.Timer(3, lambda: self.__set_state(0)).start()
+                self.__set_state(2)
+            else:
+                self.__speak("Let me know if you want to go to the park.")
+                self.__set_state(0)
+        elif self.state == 2:
+            self.__speak("We are on our way to Dragon Park.")
 
 
     def _on_topic(self, topic, data):
         if "dialog.nlu.triplet" == topic:
-            logging.debug(f"process: '{data}'")
-            triplet = ast.literal_eval(data.lower())
-            logging.debug(f"triplet: '{triplet}'")
-            if self.__is_go(triplet[1]):
-                logging.debug(f"Let's go")
+            # data = "('系', 'terminate', 'system', False)"
+            logging.debug(f"process: >>{data}<<")
+            triplet = ast.literal_eval(data)
+            self.__process_navi(triplet)
+            # if self.__is_go(triplet[1]):
+            #     logging.debug(f"Let's go")
 
         super()._on_topic(topic, data)
 
