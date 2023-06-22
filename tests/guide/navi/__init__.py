@@ -30,7 +30,7 @@ class Navigator(HolonicAgent):
 
     def __is_go(self, predict):
         logging.debug(f"predict: {predict}")
-        result = "go" == predict
+        result = ("go" == predict or "take" == predict)
         return result
     
 

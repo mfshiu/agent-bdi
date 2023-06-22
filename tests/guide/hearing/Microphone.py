@@ -76,7 +76,7 @@ class Microphone(HolonicAgent):
         # if audio_mean >= 200:
         #     print(f"audio_mean: {audio_mean}")
         # return audio_mean < 50
-        return audio_mean < 100
+        return audio_mean < 150
     
 
     def __wait_voice(self, audio_stream):
