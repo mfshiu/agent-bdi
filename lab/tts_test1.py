@@ -6,7 +6,8 @@ from TTS.api import TTS
 models = TTS.list_models()
 [print(f"{i} {name}") for i, name in enumerate(models)]
 # model_name = models[30] # tts_models/zh-CN/baker/tacotron2-DDC-GST
-model_name = models[24] # tts_models/es/mai/tacotron2-DDC
+# model_name = models[24] # tts_models/es/mai/tacotron2-DDC
+model_name = models[6] # tts_models/en/ek1/tacotron2
 print(f"model_name: {model_name}")
 # Init TTS
 tts = TTS(model_name=model_name, gpu=True)
@@ -26,4 +27,5 @@ text = "一觸即發的俄羅斯內戰突然出現轉機。在白俄羅斯總統
 text = "普里戈任在聲明中說:「我們踏上正義遊行，24小時內，移動了200公里前往達莫斯科。 在那段時間裡，我們的戰士沒有流一滴血。 現在已經到了流血的時刻了。 不過，我們明白有責任避免俄羅斯人流血，正根據計劃掉頭返回我們的大本營。"
 text = "Dónde puedo cambiar dinero?"
 text = "Me gustaría cambiar 50 dólares a euros."
+text = "The weather today is good."
 tts.tts_to_file(text=text, file_path="output3-1.wav")
