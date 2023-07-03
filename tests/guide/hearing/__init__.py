@@ -29,10 +29,13 @@ class Hearing(HolonicAgent):
         if "microphone.wave_path" == topic:
             filepath = data
             logging.debug(f"wave_path:{filepath}")
-            with open(filepath, "rb") as file:
-                file_content = file.read()
-            self.publish("hearing.voice", file_content)
-            os.remove(filepath)
+            try:
+                with open(filepath, "rb") as file:
+                    file_content = file.read()
+                self.publish("hearing.voice", file_content)
+                os.remove(filepath)
+            except Exception as ex:
+                logging.exception(ex)
 
         super()._on_topic(topic, data)
 
