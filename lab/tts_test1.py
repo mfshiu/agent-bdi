@@ -7,7 +7,7 @@ models = TTS.list_models()
 [print(f"{i} {name}") for i, name in enumerate(models)]
 # model_name = models[30] # tts_models/zh-CN/baker/tacotron2-DDC-GST
 # model_name = models[24] # tts_models/es/mai/tacotron2-DDC
-model_name = models[6] # tts_models/en/ek1/tacotron2
+model_name = models[7] # tts_models/en/ek1/tacotron2
 print(f"model_name: {model_name}")
 # Init TTS
 tts = TTS(model_name=model_name, gpu=True)

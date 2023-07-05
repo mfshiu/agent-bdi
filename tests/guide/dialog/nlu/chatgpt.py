@@ -4,6 +4,8 @@ import threading
 
 import openai
 
+from src.holon import logger
+
 # import tests.lab.lab_config
 
 def set_openai_api_key(key):
@@ -43,7 +45,7 @@ def parse_to_triplet(user_prompt):
     return result
     
 
-def understand(prompt):
+def understand(prompt, last_sentence=None):
     global _subject
     global _predict
     global _object
@@ -53,20 +55,33 @@ def understand(prompt):
         
 
     def analyze_positivity(user_prompt):
-        print(f"analyze_positivity: {user_prompt}")
-        completion = openai.Completion.create(
-            model="text-davinci-003",
-            temperature=0,
-            max_tokens=5,
-            prompt=f"Is the sentence express positive or negative?\n{user_prompt}"
-            # prompt=f"Is the sentence express positive, negative or neutral?\n{user_prompt}"
-        )
+        logger.info(f"analyze_positivity: {user_prompt}, last_sentence:{last_sentence}")
+
+        if last_sentence:
+            completion = openai.Completion.create(
+                model="text-davinci-003",
+                temperature=0,
+                max_tokens=5,
+                prompt=f"""Guide: '{last_sentence}'
+User: '{user_prompt}'
+Does that mean the user agrees or is positive? Just answer yes or no only."""
+            )
+        else:
+            completion = openai.Completion.create(
+                model="text-davinci-003",
+                temperature=0,
+                max_tokens=5,
+                prompt=f"Is '{user_prompt}' a positive sentence or word? Just response yes or no."
+                # prompt=f"Is the sentence express positive or negative?\n{user_prompt}"
+                # prompt=f"Is the sentence express positive, negative or neutral?\n{user_prompt}"
+            )
 
         # print(f'completion: {completion}')
 
         global _positivity
         text = completion['choices'][0]['text']
-        _positivity = 'pos' in text.lower()
+        #_positivity = 'pos' in text.lower()
+        _positivity = 'yes' in text.lower()
 
 
     def _process_result(result):

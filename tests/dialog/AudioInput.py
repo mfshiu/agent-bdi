@@ -11,7 +11,7 @@ import whisper
 import torch
 
 from src.holon.HolonicAgent import HolonicAgent
-from src.holon import config
+from src.holon import config, logger
 import dialog_config
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -42,7 +42,7 @@ class AudioInput(HolonicAgent):
             wave_path = dt.now().strftime("./tests/_output2/record-%m%d-%H%M-%S.wav")
             with open(wave_path, "wb") as file:
                 file.write(msg.payload)
-            logging.debug("File received and saved.")
+            logger.debug("File received and saved.")
             self.wave_queue.put(wave_path)
         else:
             super()._on_message(client, db, msg)
@@ -64,7 +64,7 @@ class AudioInput(HolonicAgent):
 
     def _run_begin(self):
         super()._run_begin()
-        logging.info(f"device:{device}")
+        logger.info(f"device:{device}")
         self.wave_queue = queue.Queue()
 
 
@@ -77,30 +77,30 @@ class AudioInput(HolonicAgent):
             try:
                 wave_path = self.wave_queue.get()
                 # wave_path = "./tests/dialog/record1.wav"
-                logging.debug(f"transcribing wave_path:{wave_path}")
+                logger.debug(f"transcribing wave_path:{wave_path}")
                 result = whisper_model.transcribe(wave_path)
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 # result = {"text": "I would like to dinner"}
                 transcribed_text = result["text"]
-                logging.debug(f"transcribed_text: {transcribed_text}")
+                logger.debug(f"transcribed_text: {transcribed_text}")
                 self.publish("guide.hearing.heared_text", transcribed_text)        
-                logging.info(f">>> \033[33m{transcribed_text}\033[0m")
+                logger.info(f">>> \033[33m{transcribed_text}\033[0m")
                 if os.path.exists(wave_path):
                     os.remove(wave_path)
-                logging.debug(f'Remained waves: {self.wave_queue.qsize()}')
+                logger.debug(f'Remained waves: {self.wave_queue.qsize()}')
             except queue.Empty:
                 pass
             except UnicodeEncodeError:
-                logging.info(f">>> \033[33m{transcribed_text.encode('utf-8')}\033[0m")
+                logger.info(f">>> \033[33m{transcribed_text.encode('utf-8')}\033[0m")
             except Exception as ex:
                 _, exc_value, _ = sys.exc_info()
-                logging.error(exc_value)
+                logger.error(exc_value)
 
     # def start(self):
     #     super().start()
 
 if __name__ == '__main__':
-    logging.info('***** AudioInput start *****')
+    logger.info('***** AudioInput start *****')
     # result = whisper_model.transcribe('tests/dialog/record-0529-0617-27.wav')
     # print(result)
     

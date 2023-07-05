@@ -1,5 +1,7 @@
 import logging
 
+logger = logging.getLogger('ABDI')
+
 class config:
     def __init__(self):
         self.mqtt_address = "localhost"

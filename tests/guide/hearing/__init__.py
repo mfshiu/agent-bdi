@@ -4,13 +4,9 @@ import os, sys
 
 import logging
 
-from src.holon import Helper
-from src.holon import config
+from src.holon import logger
 from src.holon.HolonicAgent import HolonicAgent
 from hearing.microphone import Microphone
-# from hearing.VoiceToText import VoiceToText
-# from tests.guide.hearing.microphone import Microphone
-# from tests.guide.hearing.VoiceToText import VoiceToText
 
 class Hearing(HolonicAgent):
     def __init__(self, cfg):
@@ -28,20 +24,13 @@ class Hearing(HolonicAgent):
     def _on_topic(self, topic, data):
         if "microphone.wave_path" == topic:
             filepath = data
-            logging.debug(f"wave_path:{filepath}")
+            logger.debug(f"wave_path:{filepath}")
             try:
                 with open(filepath, "rb") as file:
                     file_content = file.read()
                 self.publish("hearing.voice", file_content)
                 os.remove(filepath)
             except Exception as ex:
-                logging.exception(ex)
+                logger.exception(ex)
 
         super()._on_topic(topic, data)
-
-
-if __name__ == '__main__':
-    Helper.init_logging(config.log_dir, config.log_level)
-    logging.info('***** Hearing start *****')
-    a = Hearing()
-    a.start()

@@ -1,5 +1,5 @@
-import logging
 import inspect
+import logging
 from multiprocessing import Process
 import os
 import signal
@@ -18,6 +18,8 @@ from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
 from holon import config
+
+logger = logging.getLogger('ABDI')
 
 class HolonicAgent(Agent) :
     def __init__(self, cfg:config=None, b:Blackboard=None, d:HolonicDesire=None, i: HolonicIntention=None):
@@ -52,7 +54,7 @@ class HolonicAgent(Agent) :
         return not self._terminate_lock.is_set()
 
     def _on_connect(self, client, userdata, flags, rc):
-        logging.info(f"{self.name} result code:{str(rc)}")
+        logger.info(f"{self.name} result code:{str(rc)}")
         client.subscribe("echo")
         client.subscribe("terminate")
 
@@ -84,11 +86,11 @@ class HolonicAgent(Agent) :
 
 
     def _run_begin(self):
-        Helper.init_logging(self._config.log_dir, self._config.log_level)
-        logging.debug(f"{self.name} ...")
+        #Helper.init_logging(self._config.log_dir, self._config.log_level)
+        logger.debug(f"{self.name} ...")
         
         def signal_handler(signal, frame):
-            logging.warning(f"{self.name} Ctrl-C: {self.__class__.__name__}")
+            logger.warning(f"{self.name} Ctrl-C: {self.__class__.__name__}")
             self.terminate()
         signal.signal(signal.SIGINT, signal_handler)
 
@@ -108,7 +110,7 @@ class HolonicAgent(Agent) :
         pass
 
     def _running(self):
-        logging.debug(f"{self.name} ...")
+        logger.debug(f"{self.name} ...")
 
     def _run(self, cfg:config):
         self._config = cfg
@@ -117,28 +119,29 @@ class HolonicAgent(Agent) :
         self._run_end()
     
     def _run_end(self):
-        logging.debug(f"{self.name} ...")
+        logger.debug(f"{self.name} ...")
         # self.is_running = False
         # self._terminate_lock.wait()
         while not self._terminate_lock.is_set():
             self._terminate_lock.wait(1)
         self._stop_mqtt()
 
+
     def _start_mqtt(self):
-        logging.debug(f"{self.name} ...")
+        logger.debug(f"{self.name} ...")
         self._mqtt_client = mqtt.Client()
         self._mqtt_client.on_connect = self._on_connect
         self._mqtt_client.on_message = self._on_message
         cfg = self._config
         if cfg.mqtt_username:
             self._mqtt_client.username_pw_set(cfg.mqtt_username, cfg.mqtt_password)
-        logging.debug(f"addr:{cfg.mqtt_address} port:{cfg.mqtt_port} keep:{cfg.mqtt_keepalive}")
+        logger.debug(f"addr:{cfg.mqtt_address} port:{cfg.mqtt_port} keep:{cfg.mqtt_keepalive}")
         self._mqtt_client.connect(cfg.mqtt_address, cfg.mqtt_port, cfg.mqtt_keepalive)
         self._mqtt_client.loop_start()
 
 
     def _stop_mqtt(self):
-        logging.debug(f"{self.name} ...")
+        logger.debug(f"{self.name} ...")
         self._mqtt_client.disconnect()
         self._mqtt_client.loop_stop()
 
@@ -150,7 +153,7 @@ class HolonicAgent(Agent) :
         
 
     def terminate(self):
-        logging.debug(f"{self.name} ...")
+        logger.debug(f"{self.name} ...")
 
         for a in self.head_agents:
             name = a.__class__.__name__

@@ -1,13 +1,7 @@
-# import os, sys
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
 import ast
-import logging
 import threading
 
-# import openai
-
-from src.holon import Helper
+from src.holon import Helper, logger
 from src.holon.HolonicAgent import HolonicAgent
 from navi.VisualInput import VisualInput
 from navi.RouteFind import RouteFind
@@ -29,23 +23,23 @@ class Navigator(HolonicAgent):
 
 
     def __is_go(self, predict):
-        logging.debug(f"predict: {predict}")
+        logger.debug(f"predict: {predict}")
         result = ("go" == predict or "take" == predict)
         return result
     
 
     def __speak(self, sentence):
-        logging.debug(f"Say: '{sentence}'")
-        self.publish('voice.what_to_say', sentence)
+        logger.info(f"Say: '{sentence}'")
+        self.publish('voice.text', sentence)
 
 
     def __set_state(self, new_state):
         self.state = new_state
-        logging.debug(f"New state: {new_state}")
+        logger.debug(f"New state: {new_state}")
     
 
     def __process_navi(self, triplet):
-        logging.debug(f"state: {self.state}, triplet: '{triplet}'")
+        logger.debug(f"state: {self.state}, triplet: '{triplet}'")
 
         if self.state == 0:
             if self.__is_go(triplet[1]):
@@ -55,11 +49,15 @@ class Navigator(HolonicAgent):
                 else:
                     self.__speak("I can only take you to a park.")
             else:
-                self.__speak("Where to go?")
+                pass
+                #self.__speak("Where to go?")
         elif self.state == 1:
             if triplet[3]:
                 self.__speak("OK, let's go.")
-                threading.Timer(3, lambda: self.__set_state(0)).start()
+                def arrive():
+                    self.__set_state(0)
+                    self.__speak("We arrive the Dragon Park.")
+                threading.Timer(6, lambda: arrive()).start()
                 self.__set_state(2)
             else:
                 self.__speak("Let me know if you want to go to the park.")
@@ -71,7 +69,7 @@ class Navigator(HolonicAgent):
     def _on_topic(self, topic, data):
         if "dialog.nlu.triplet" == topic:
             # data = "('系', 'terminate', 'system', False)"
-            logging.debug(f"process: >>{data}<<")
+            logger.info(f"process: {data}")
             triplet = ast.literal_eval(data)
             self.__process_navi(triplet)
             # if self.__is_go(triplet[1]):
@@ -82,7 +80,7 @@ class Navigator(HolonicAgent):
 
 if __name__ == '__main__':
     Helper.init_logging()
-    logging.info('***** Hearing start *****')
+    logger.info('***** Hearing start *****')
     a = Navigator()
     ans = a.__is_go('go')
     print(f'Is go: {ans}')

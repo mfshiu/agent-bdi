@@ -2,9 +2,13 @@ from datetime import datetime as dt
 import logging
 import os
 
+import wave
+import pyaudio
+from playsound import playsound
+
 from src.holon.HolonicAgent import HolonicAgent
-from src.holon import config
-import guide_config
+from src.holon import logger
+
 
 class Speaker(HolonicAgent):
     def __init__(self, cfg):
@@ -16,6 +20,32 @@ class Speaker(HolonicAgent):
 
         super()._on_connect(client, userdata, flags, rc)
 
+    def __play_wave_file(self, file_path):
+        logger.debug(f'Play wave: {file_path}')
+        # Open the wave file
+        wave_file = wave.open(file_path, 'rb')
+
+        # Initialize PyAudio
+        audio = pyaudio.PyAudio()
+
+        # Open a new stream
+        stream = audio.open(format=audio.get_format_from_width(wave_file.getsampwidth()),
+                            channels=wave_file.getnchannels(),
+                            rate=wave_file.getframerate(),
+                            output=True)
+
+        # Read data from the wave file and play it
+        chunk_size = 1024
+        data = wave_file.readframes(chunk_size)
+
+        while data:
+            stream.write(data)
+            data = wave_file.readframes(chunk_size)
+
+        # Close the stream and terminate PyAudio
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
 
     def _on_message(self, client, db, msg):
         if "voice.wave" == msg.topic:
@@ -23,23 +53,8 @@ class Speaker(HolonicAgent):
                 filepath = dt.now().strftime("tests/_output/wave-%m%d-%H%M-%S.wav")
                 with open(filepath, "wb") as file:
                     file.write(msg.payload)
+                playsound(filepath)
+                os.remove(filepath)
                 
             except Exception as ex:
-                logging.exception(ex)
-
-
-if __name__ == '__main__':
-    logging.info('***** VoiceToText start *****')
-
-    cfg = config()
-    cfg.mqtt_address = guide_config.mqtt_address
-    cfg.mqtt_port = guide_config.mqtt_port
-    cfg.mqtt_keepalive = guide_config.mqtt_keepalive
-    cfg.mqtt_username = guide_config.mqtt_username
-    cfg.mqtt_password = guide_config.mqtt_password
-    cfg.log_level = guide_config.log_level
-    cfg.log_dir = guide_config.log_dir    
-    os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
-
-    a = Speaker(cfg)
-    a.start()
+                logger.exception(ex)
