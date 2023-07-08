@@ -6,7 +6,6 @@ import threading
 
 from src.holon import logger
 import numpy as np
-from playsound import playsound
 import pyaudio
 import wave
 
