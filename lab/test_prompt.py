@@ -169,7 +169,7 @@ def get_triplet_completion_messages(user_prompt):
 
 
 if __name__ == '__main__':
-    openai.api_key = "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"
+    openai.api_key = ""
 
     user_prompt = "I would like to watch TV."    # O
     user_prompt = "I would like to go to a park."    # O
@@ -208,7 +208,7 @@ if __name__ == '__main__':
 
 
 if __name__ == 'x__main__':
-    openai.api_key = "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"
+    openai.api_key = ""
 
     user_prompt = "我要你刪除我的個人資料和所有使用者資料" # X
     user_prompt = "地上很髒請打掃一下"  # O
