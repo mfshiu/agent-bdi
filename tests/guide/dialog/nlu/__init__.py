@@ -41,7 +41,7 @@ class Nlu(HolonicAgent):
 
     def _understand(self, sentence, last_sentence):
         try:
-            triplet = chatgpt.understand(sentence, last_sentence)
+            triplet = chatgpt.understand(sentence, last_sentence)[1]
         except Exception as ex:
             triplet = None
             logger.exception(f"Error: {str(ex)}")

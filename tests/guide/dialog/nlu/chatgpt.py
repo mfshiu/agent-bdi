@@ -1,4 +1,5 @@
 #Note: you need to be using OpenAI Python v0.27.0 for the code below to work
+import json
 import os
 import threading
 
@@ -50,6 +51,7 @@ def understand(prompt, last_sentence=None):
     global _predict
     global _object
     global _positivity
+    global _classification
 
     print(f"openai.api_key: {openai.api_key}")
         
@@ -82,6 +84,64 @@ Does that mean the user agrees or is positive? Just answer yes or no only."""
         text = completion['choices'][0]['text']
         #_positivity = 'pos' in text.lower()
         _positivity = 'yes' in text.lower()
+
+
+    def classify_instruction(user_prompt):
+        delimiter = "####"
+        system_message = f"""
+    You will receive an instruction from a user.
+    The user's directive will be separated by {delimiter} characters.
+    Please categorize the instruction into major and minor categories.
+    And provide your output in json format with key values: primary (major category) and secondary (minor category).
+
+    Primary (main category): go somewhere, get items, clean up the mess, provide information, greeting or unsupported categories.
+
+    minor categories of greeting:
+    normal
+    happy
+
+    minor categories of lead the way:
+    go to a park
+    go to a entrance
+    go to a toilet
+    go to a export
+    go to a restaurant
+
+    minor categories of get items:
+    take a book
+    take a glass of water
+    take the remote control
+    take a fruit
+    take some items
+
+    minor categories of clean up the mess:
+    clear the table
+    clean up the ground
+    clean windows
+    clean others 
+
+    minor categories of provide information:
+    product specification
+    price
+    reviews
+    restaurant suggestion
+    others
+    talk to real people
+
+    """
+        messages =  [  
+            {'role':'system', 'content': system_message},    
+            {'role':'user', 'content': f"{delimiter}{user_prompt}{delimiter}"},  
+        ]
+
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            temperature=0,
+            messages=messages
+        )
+        content = completion['choices'][0]['message']['content']
+        global _classification
+        _classification = tuple(json.loads(content).values())
 
 
     def _process_result(result):
@@ -181,7 +241,9 @@ Does that mean the user agrees or is positive? Just answer yes or no only."""
         global _object
         _object = _process_result(completion['choices'][0]['message']['content'])
     
+
     threads = []
+    threads.append(threading.Thread(target=classify_instruction, args=(prompt,)))
     threads.append(threading.Thread(target=parse_subject, args=(prompt,)))
     threads.append(threading.Thread(target=parse_predict, args=(prompt,)))
     threads.append(threading.Thread(target=parse_object, args=(prompt,)))
@@ -193,32 +255,7 @@ Does that mean the user agrees or is positive? Just answer yes or no only."""
         thread.join()
 
     # return (_subject, _predict, _object)
-    return (_subject, _predict, _object, _positivity)
-
-
-if __name__ == '__main__1':
-    print(f'***** {__file__} Start *****\n')
-
-    set_openai_api_key(os.getenv('OPENAI_API_KEY'))
-
-    prompt = "Yes, I like it."
-    prompt = "No, I don't like it."
-    prompt = "好的，我同意。"
-    prompt = "那就這麼辦吧"
-    prompt = "entonces haz esto"
-    prompt = "genial"
-    prompt = "這真是太好了"
-    prompt = "ningún problema"
-    prompt = "no hay problema estoy de acuerdo"
-    prompt = "DE ACUERDO"
-    prompt = "Estoy de acuerdo"
-    prompt = "esto no está bien"
-    prompt = "非常好"
-    result = analyze_positivity(prompt)
-
-    print(f"result: {result}")
-
-    print(f'\n***** {__file__} Stop *****')
+    return _classification, (_subject, _predict, _object, _positivity)
 
 
 if __name__ == '__main__':
@@ -254,13 +291,13 @@ if __name__ == '__main__':
     prompt = "you go back!"
     prompt = "yes"
     prompt = "Run"
-    prompt = "我要去公園"
     prompt = "shutup"
     prompt = "I love my Ting"
     prompt = "wonderful"
     prompt = "Dog"
     prompt = "esto no está bien"
     prompt = "eso es bueno"
+    prompt = "我要去公園"
     triplet = understand(prompt)
 
     print(f"result: {triplet}")
