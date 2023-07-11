@@ -19,7 +19,8 @@ class Navigator(HolonicAgent):
 
     def _on_connect(self, client, userdata, flags, rc):
         # client.subscribe("dialog.nlu.triplet")
-        client.subscribe("dialog.knowledge")
+        client.subscribe("go somewhere.knowledge")        
+        threading.Timer(2, lambda: self.publish('brain.register_subject', 'go somewhere')).start()
 
         super()._on_connect(client, userdata, flags, rc)
 
@@ -48,22 +49,24 @@ class Navigator(HolonicAgent):
                 def arrive():
                     self.__set_state(0)
                     brain_helper.speak(self, f"We arrive the Dragon {self.target}.")
+                    self.publish('brain.subject_done')
                 threading.Timer(6, lambda: arrive()).start()
                 self.__set_state(2)
             else:
                 brain_helper.speak(self, f"Let me know if you want to go to the {self.target}.")
                 self.__set_state(0)
+                self.publish('brain.subject_done')
         elif self.state == 2:
             brain_helper.speak(self, f"We are on our way to Dragon {self.target}.")
 
 
     def _on_topic(self, topic, data):
-        if "dialog.knowledge" == topic:
+        if "go somewhere.knowledge" == topic:
             knowledge = ast.literal_eval(data)
-            if (self.state == 0 and knowledge[0][0] == 'go somewhere') or self.state != 0:
+            # if (self.state == 0 and knowledge[0][0] == 'go somewhere') or self.state != 0:
                 # logger.info(f"process: {data}")
                 # if knowledge[0]
-                self.__process_navi(knowledge)
+            self.__process_navi(knowledge)
 
         super()._on_topic(topic, data)
 

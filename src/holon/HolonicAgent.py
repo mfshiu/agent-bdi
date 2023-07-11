@@ -146,14 +146,14 @@ class HolonicAgent(Agent) :
         self._mqtt_client.loop_stop()
 
 
-    def publish(self, topic, payload):
+    def publish(self, topic, payload=None):
         # logging.debug(f'{str(self._mqtt_client.socket())}, topic:{topic}, payload:{payload}')
         ret = self._mqtt_client.publish(topic, payload)
         # logging.debug(f'ret: {str(ret)}')
         
 
     def terminate(self):
-        logger.debug(f"{self.name} ...")
+        logger.warn(f"{self.name}.")
 
         for a in self.head_agents:
             name = a.__class__.__name__

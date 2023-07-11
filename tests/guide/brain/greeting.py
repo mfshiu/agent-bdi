@@ -1,4 +1,5 @@
 import ast
+import threading
 
 from src.holon import logger
 from src.holon.HolonicAgent import HolonicAgent
@@ -11,13 +12,27 @@ class Greeting(HolonicAgent):
 
 
     def _on_connect(self, client, userdata, flags, rc):
-        client.subscribe("dialog.knowledge")
+        client.subscribe("greeting.knowledge")
+
+        # self.publish('brain.register_subject', 'greeting')
+        threading.Timer(1, lambda: self.publish('brain.register_subject', 'greeting')).start()
         super()._on_connect(client, userdata, flags, rc)
 
 
     def _on_topic(self, topic, data):
-        if "dialog.knowledge" == topic:
+        if "greeting.knowledge" == topic:
             knowledge = ast.literal_eval(data)
-            if knowledge[0][0] == 'greeting':
+            if knowledge[0][1] == 'normal':
                 brain_helper.speak(self, f'Aloha')
+            elif knowledge[0][1] == 'happy':
+                brain_helper.speak(self, f'Wonderful')
+            else:
+                logger.info(f'Uknown greeting mood.')
+            self.publish('brain.subject_done')
+
         super()._on_topic(topic, data)
+
+
+    def terminate(self):
+        self.publish('brain.unregister_subject', 'greeting')
+        super().terminate()
