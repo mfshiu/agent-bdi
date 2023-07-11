@@ -100,7 +100,7 @@ Does that mean the user agrees or is positive? Just answer yes or no only."""
     normal
     happy
 
-    minor categories of lead the way:
+    minor categories of go somewhere:
     go to a park
     go to a entrance
     go to a toilet

@@ -29,9 +29,10 @@ class Nlu(HolonicAgent):
     def _on_topic(self, topic, data):
         if "hearing.trans.text" == topic:
             logger.debug(f"{self.name} heared '{data}'")
-            triplet = self._understand(data, self.last_sentence)
-            self.publish("dialog.nlu.triplet", str(triplet))
-            logger.info(f"Understand: {triplet}")
+            knowledge = self._understand(data, self.last_sentence)
+            self.publish("dialog.nlu.triplet", str(knowledge[1]))
+            self.publish("dialog.knowledge", str(knowledge))
+            logger.info(f"Understand: {knowledge}")
         elif "voice.text" == topic:
             logger.info(f"System ask: {data}")
             self.last_sentence = data
@@ -41,11 +42,12 @@ class Nlu(HolonicAgent):
 
     def _understand(self, sentence, last_sentence):
         try:
-            triplet = chatgpt.understand(sentence, last_sentence)[1]
+            knowledge = chatgpt.understand(sentence, last_sentence)
+            # logger.info(f'knowledge: {knowledge}')
         except Exception as ex:
-            triplet = None
+            knowledge = None
             logger.exception(f"Error: {str(ex)}")
-        return triplet
+        return knowledge
 
 
 # if __name__ == '__main__':
