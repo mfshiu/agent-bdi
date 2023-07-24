@@ -23,9 +23,9 @@ class Greeting(HolonicAgent):
         if "greeting.knowledge" == topic:
             knowledge = ast.literal_eval(data)
             if knowledge[0][1] == 'normal':
-                brain_helper.speak(self, f'Aloha')
+                brain_helper.speak(self, f'Hello, have a good day.')
             elif knowledge[0][1] == 'happy':
-                brain_helper.speak(self, f'Wonderful')
+                brain_helper.speak(self, f'Wonderful, very nice to meet you.')
             else:
                 logger.info(f'Uknown greeting mood.')
             self.publish('brain.subject_done')
