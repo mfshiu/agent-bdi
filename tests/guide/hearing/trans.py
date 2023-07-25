@@ -55,9 +55,9 @@ class Transcriptionist(HolonicAgent):
                 continue
             try:
                 wave_path = self.wave_queue.get()
-                logging.debug(f'transcribing wave_path: {wave_path}')
+                logger.debug(f'transcribing wave_path: {wave_path}')
                 result = whisper_model.transcribe(wave_path)
-                logging.debug(f'result: {result}')
+                logger.debug(f'result: {result}')
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 transcribed_text = result["text"]
                 # logging.debug(f'running addr: {self._config.mqtt_address}')
