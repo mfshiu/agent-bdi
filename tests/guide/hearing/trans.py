@@ -2,6 +2,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from datetime import datetime as dt
 import queue
+from multiprocessing import Process
 import time
 
 import whisper
@@ -13,6 +14,7 @@ import guide_config
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # whisper.DecodingOptions(language="zh")
+global whisper_model
 whisper_model = whisper.load_model("small", device=device)
 # whisper_model = whisper.load_model("medium", device=device)
 
@@ -23,32 +25,20 @@ class Transcriptionist(HolonicAgent):
 
     def _on_connect(self, client, userdata, flags, rc):
         client.subscribe("hearing.voice")
+        client.subscribe("trans.test")
 
         super()._on_connect(client, userdata, flags, rc)
 
 
     def _on_message(self, client, db, msg):
         if "hearing.voice" == msg.topic:
-            data = msg.payload
             wave_path = dt.now().strftime("tests/_input/voice-%m%d-%H%M-%S.wav")
             # logging.debug(f'data: {data}')
             with open(wave_path, "wb") as file:
                 file.write(msg.payload)
             self.wave_queue.put(wave_path)
-
-        # super()._on_topic(topic, data)
-
-
-    # def _on_topic(self, topic, data):
-    #     if "hearing.voice" == topic:
-    #         # logging.debug(f"wave_path:{data}")
-    #         wave_path = dt.now().strftime("tests/_input/voice-%m%d-%H%M-%S.wav")
-    #         logging.debug(f'data: {data}')
-    #         with open(wave_path, "wb") as file:
-    #             file.write(data)
-    #         self.wave_queue.put(wave_path)
-
-    #     super()._on_topic(topic, data)
+        elif "trans.test" == msg.topic:
+            self.publish("trans.test", 'publish ')
 
 
     def _run_begin(self):
@@ -58,16 +48,19 @@ class Transcriptionist(HolonicAgent):
 
 
     def _running(self):
+        global whisper_model
         while self.is_running():
             if self.wave_queue.empty():
                 time.sleep(.1)
                 continue
             try:
                 wave_path = self.wave_queue.get()
+                logger.debug(f'transcribing wave_path: {wave_path}')
                 result = whisper_model.transcribe(wave_path)
+                logger.debug(f'result: {result}')
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 transcribed_text = result["text"]
-                print(f'running addr: {self._config.mqtt_address}')
+                # logging.debug(f'running addr: {self._config.mqtt_address}')
                 self.publish("hearing.trans.text", transcribed_text)        
                 logger.info(f">>> \033[33m{transcribed_text}\033[0m")
                 if os.path.exists(wave_path):

@@ -2,6 +2,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import logging
+import multiprocessing
 import signal
 
 import Helper
@@ -41,6 +42,7 @@ if __name__ == '__main__':
 
     a = Transcriptionist(cfg)
     a.start()
+    # a.test()
 
     # time.sleep(5)
     # a.terminate()
