@@ -4,10 +4,10 @@ from datetime import datetime as dt
 import queue
 import time
 
-import logging
 import whisper
 import torch
 
+from src.holon import logger
 from src.holon.HolonicAgent import HolonicAgent
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -28,11 +28,11 @@ class AudioInput(HolonicAgent):
 
     def _on_message(self, client, db, msg):
         if "record_wave" == msg.topic:
-            # logging.debug(f"wave_path:{data}")
+            # logger.debug(f"wave_path:{data}")
             wave_path = dt.now().strftime("tests/_output2/record-%m%d-%H%M-%S.wav")
             with open(wave_path, "wb") as file:
                 file.write(msg.payload)
-            logging.debug("File received and saved.")
+            logger.debug("File received and saved.")
             self.wave_queue.put(wave_path)
         else:
             super()._on_message(client, db, msg)
@@ -54,7 +54,7 @@ class AudioInput(HolonicAgent):
 
     def _run_begin(self):
         super()._run_begin()
-        logging.info(f"device:{device}")
+        logger.info(f"device:{device}")
         self.wave_queue = queue.Queue()
 
 
@@ -69,20 +69,20 @@ class AudioInput(HolonicAgent):
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 transcribed_text = result["text"]
                 self.publish("guide.hearing.heared_text", transcribed_text)        
-                logging.info(f">>> \033[33m{transcribed_text}\033[0m")
+                logger.info(f">>> \033[33m{transcribed_text}\033[0m")
                 if os.path.exists(wave_path):
                     os.remove(wave_path)
-                logging.debug(f'Remained waves: {self.wave_queue.qsize()}')
+                logger.debug(f'Remained waves: {self.wave_queue.qsize()}')
             except queue.Empty:
                 pass
             except UnicodeEncodeError:
-                logging.info(f">>> \033[33m{transcribed_text.encode('utf-8')}\033[0m")
+                logger.info(f">>> \033[33m{transcribed_text.encode('utf-8')}\033[0m")
             except Exception as ex:
                 _, exc_value, _ = sys.exc_info()
-                logging.error(exc_value)
+                logger.error(exc_value)
 
 
 if __name__ == '__main__':
-    logging.info('***** VoiceToText start *****')
+    logger.info('***** VoiceToText start *****')
     a = VoiceToText()
     a.start()

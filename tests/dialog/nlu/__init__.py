@@ -4,7 +4,7 @@ import os
 
 import logging
 
-from src.holon import Helper
+from src.holon import logger
 from src.holon.HolonicAgent import HolonicAgent
 from tests.lab import ChatComp2 as chatgpt
 # import DialogSession
@@ -23,9 +23,9 @@ class Nlu(HolonicAgent):
 
     def _on_topic(self, topic, data):
         if "guide.hearing.heared_text" == topic:
-            logging.debug(f"{self.name} heared '{data}'")
+            logger.debug(f"{self.name} heared '{data}'")
             triplet = self._understand(data)
-            logging.info(f"Understand: {triplet}")
+            logger.info(f"Understand: {triplet}")
             self.publish("dialog.nlu.triplet", str(triplet))
         super()._on_topic(topic, data)
 
@@ -35,7 +35,7 @@ class Nlu(HolonicAgent):
             triplet = chatgpt.understand(sentence)
         except Exception as ex:
             triplet = None
-            logging.exception(f"Error: {str(ex)}")
+            logger.exception(f"Error: {str(ex)}")
         return triplet
 
 

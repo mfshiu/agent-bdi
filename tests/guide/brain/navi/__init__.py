@@ -6,6 +6,7 @@ from src.holon.HolonicAgent import HolonicAgent
 from navi.VisualInput import VisualInput
 from navi.RouteFind import RouteFind
 from navi.walk.WalkGuide import WalkGuide
+from brain import brain_helper
 
 class Navigator(HolonicAgent):
     def __init__(self, cfg):
@@ -17,7 +18,9 @@ class Navigator(HolonicAgent):
 
 
     def _on_connect(self, client, userdata, flags, rc):
-        client.subscribe("dialog.nlu.triplet")
+        # client.subscribe("dialog.nlu.triplet")
+        client.subscribe("go somewhere.knowledge")        
+        threading.Timer(2, lambda: self.publish('brain.register_subject', 'go somewhere')).start()
 
         super()._on_connect(client, userdata, flags, rc)
 
@@ -26,54 +29,44 @@ class Navigator(HolonicAgent):
         logger.debug(f"predict: {predict}")
         result = ("go" == predict or "take" == predict)
         return result
-    
-
-    def __speak(self, sentence):
-        logger.info(f"Say: '{sentence}'")
-        self.publish('voice.text', sentence)
 
 
     def __set_state(self, new_state):
         self.state = new_state
         logger.debug(f"New state: {new_state}")
+       
     
-
-    def __process_navi(self, triplet):
-        logger.debug(f"state: {self.state}, triplet: '{triplet}'")
-
+    def __process_navi(self, knowledge):
+        logger.debug(f"state: {self.state}, knowledge: '{knowledge}'")
+        triplet = knowledge[1]
         if self.state == 0:
-            if self.__is_go(triplet[1]):
-                if triplet[2] == 'park':
-                    self.__speak("How about going to Dragon Park?")
-                    self.__set_state(1)
-                else:
-                    self.__speak("I can only take you to a park.")
-            else:
-                pass
-                #self.__speak("Where to go?")
+            self.target = triplet[2]
+            brain_helper.speak(self, f"How about going to Dragon {self.target}?")
+            self.__set_state(1)
         elif self.state == 1:
             if triplet[3]:
-                self.__speak("OK, let's go.")
+                brain_helper.speak(self, f"OK, let's go.")
                 def arrive():
                     self.__set_state(0)
-                    self.__speak("We arrive the Dragon Park.")
+                    brain_helper.speak(self, f"We arrive the Dragon {self.target}.")
+                    self.publish('brain.subject_done')
                 threading.Timer(6, lambda: arrive()).start()
                 self.__set_state(2)
             else:
-                self.__speak("Let me know if you want to go to the park.")
+                brain_helper.speak(self, f"Let me know if you want to go to the {self.target}.")
                 self.__set_state(0)
+                self.publish('brain.subject_done')
         elif self.state == 2:
-            self.__speak("We are on our way to Dragon Park.")
+            brain_helper.speak(self, f"We are on our way to Dragon {self.target}.")
 
 
     def _on_topic(self, topic, data):
-        if "dialog.nlu.triplet" == topic:
-            # data = "('系', 'terminate', 'system', False)"
-            logger.info(f"process: {data}")
-            triplet = ast.literal_eval(data)
-            self.__process_navi(triplet)
-            # if self.__is_go(triplet[1]):
-            #     logging.debug(f"Let's go")
+        if "go somewhere.knowledge" == topic:
+            knowledge = ast.literal_eval(data)
+            # if (self.state == 0 and knowledge[0][0] == 'go somewhere') or self.state != 0:
+                # logger.info(f"process: {data}")
+                # if knowledge[0]
+            self.__process_navi(knowledge)
 
         super()._on_topic(topic, data)
 

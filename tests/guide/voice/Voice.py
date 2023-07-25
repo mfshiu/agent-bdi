@@ -1,5 +1,5 @@
 from holon.HolonicAgent import HolonicAgent
-from voice.Speaker import Speaker
+from tests.guide.voice.speaker import Speaker
 from voice.ToneProcessing import ToneProcessing
 
 class Voice(HolonicAgent):
