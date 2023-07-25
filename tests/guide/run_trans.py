@@ -39,6 +39,7 @@ if __name__ == '__main__':
     os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
 
     Helper.init_logging(log_dir='tests/guide/_log', log_level=logging.DEBUG)
+    multiprocessing.set_start_method('spawn')
 
     a = Transcriptionist(cfg)
     a.start()
