@@ -1,11 +1,12 @@
 import ast
 import threading
 
-from src.holon import Helper, logger
+from src.holon import logger
 from src.holon.HolonicAgent import HolonicAgent
 from navi.VisualInput import VisualInput
 from navi.RouteFind import RouteFind
 from navi.walk.WalkGuide import WalkGuide
+import Helper
 
 class Navigator(HolonicAgent):
     def __init__(self, cfg):

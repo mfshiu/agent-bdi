@@ -12,3 +12,4 @@ class config:
 
         self.log_level = logging.DEBUG
         self.log_dir = "D:\\Work\\SDK\\agent-bdi\\tests\guide\\_log"
+

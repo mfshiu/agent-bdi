@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import signal
 
 from src.holon import config
-from src.holon import Helper
+from tests.guide import Helper
 import guide_config
 from hearing.microphone import Microphone
 

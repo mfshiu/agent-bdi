@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import logging
 import signal
 
-from src.holon import Helper
+import Helper
 from src.holon import config
 from src.holon.HolonicAgent import HolonicAgent
 
@@ -36,6 +36,8 @@ if __name__ == '__main__':
     cfg.log_level = guide_config.log_level
     cfg.log_dir = guide_config.log_dir    
     os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
+
+    Helper.init_logging(log_dir='tests/guide/_log')
 
     a = Navigator(cfg)
     a.start()

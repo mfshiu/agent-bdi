@@ -1,4 +1,3 @@
-from src.holon import logger
 from src.holon.HolonicAgent import HolonicAgent
 from brain.navi import Navigator
 from brain.greeting import Greeting

@@ -1,7 +1,8 @@
 import ast
 import threading
 
-from src.holon import Helper, logger
+import Helper
+from Helper import logger
 from src.holon.HolonicAgent import HolonicAgent
 from navi.VisualInput import VisualInput
 from navi.RouteFind import RouteFind

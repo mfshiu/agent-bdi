@@ -5,7 +5,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import signal
 
-from src.holon import Helper
+import Helper
 from src.holon import config
 from src.holon.HolonicAgent import HolonicAgent
 
