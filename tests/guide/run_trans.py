@@ -2,6 +2,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import logging
+import multiprocessing
 import signal
 
 from src.holon import Helper
@@ -37,8 +38,11 @@ if __name__ == '__main__':
     cfg.log_dir = guide_config.log_dir    
     os.environ["OPENAI_API_KEY"] = guide_config.openai_api_key
 
+    multiprocessing.set_start_method('spawn')
+
     a = Transcriptionist(cfg)
     a.start()
+    # a.test()
 
     # time.sleep(5)
     # a.terminate()
