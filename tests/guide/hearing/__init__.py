@@ -28,7 +28,7 @@ class Hearing(HolonicAgent):
             try:
                 with open(filepath, "rb") as file:
                     file_content = file.read()
-                self.publish("hearing.voice", file_content)
+                self._publish("hearing.voice", file_content)
                 os.remove(filepath)
             except Exception as ex:
                 logger.exception(ex)

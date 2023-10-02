@@ -31,7 +31,7 @@ class Nlu(HolonicAgent):
             logger.debug(f"{self.name} heared '{data}'")
             knowledge = self._understand(data, self.last_sentence)
             # self.publish("dialog.nlu.triplet", str(knowledge[1]))
-            self.publish("dialog.knowledge", str(knowledge))
+            self._publish("dialog.knowledge", str(knowledge))
             logger.info(f"Understand: {knowledge}")
         elif "voice.text" == topic:
             logger.info(f"System ask: {data}")

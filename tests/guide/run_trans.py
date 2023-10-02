@@ -6,7 +6,7 @@ import multiprocessing
 import signal
 
 import Helper
-from src.holon import config
+from src.holon import AbdiConfig
 from src.holon.HolonicAgent import HolonicAgent
 
 from src.holon.HolonicAgent import HolonicAgent
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         print("signal_handler")
     signal.signal(signal.SIGINT, signal_handler)
 
-    cfg = config()
+    cfg = AbdiConfig()
     cfg.mqtt_address = guide_config.mqtt_address
     cfg.mqtt_port = guide_config.mqtt_port
     cfg.mqtt_keepalive = guide_config.mqtt_keepalive

@@ -49,7 +49,7 @@ class Microphone(HolonicAgent):
         first_frames = []
         logger.debug("for 60 second...")
         for _ in range(0, int(RATE / CHUNK * 60)):
-            if not self.is_running():
+            if not self._is_running():
                 break
             # print(".", end="")
             try:
@@ -75,7 +75,7 @@ class Microphone(HolonicAgent):
 
         logger.debug("...")
         for i in range(0, int(RATE / CHUNK * MAX_RECORD_SECONDS)):
-            if not self.is_running():
+            if not self._is_running():
                 break
             try:
                 sound_raw = audio_stream.read(CHUNK)
@@ -133,7 +133,7 @@ class Microphone(HolonicAgent):
                 wf.setframerate(RATE)
                 wf.writeframes(b''.join(frames))
                 wf.close()
-                self.publish("microphone.wave_path", wave_path)                
+                self._publish("microphone.wave_path", wave_path)                
                 # test
                 #playsound(wave_path)
                 #os.remove(wave_path)
@@ -147,7 +147,7 @@ class Microphone(HolonicAgent):
 
 
     def _running(self):
-        while self.is_running():
+        while self._is_running():
             try:
                 # filepath = self._record()
                 filepath = self._record2()
@@ -174,7 +174,7 @@ class Microphone(HolonicAgent):
         frames = []
         logger.info("Start recording")
         for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-            if (self.is_running()):
+            if (self._is_running()):
                 # print(".", end="")
                 data = stream.read(CHUNK)
                 frames.append(data)

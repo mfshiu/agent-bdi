@@ -3,7 +3,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import signal
 
-from src.holon import config
+from src.holon import AbdiConfig
 from tests.guide import Helper
 import guide_config
 from hearing.microphone import Microphone
@@ -18,7 +18,7 @@ if __name__ == '__main__':
         print("signal_handler")
     signal.signal(signal.SIGINT, signal_handler)
 
-    cfg = config()
+    cfg = AbdiConfig()
     cfg.mqtt_address = guide_config.mqtt_address
     cfg.mqtt_port = guide_config.mqtt_port
     cfg.mqtt_keepalive = guide_config.mqtt_keepalive

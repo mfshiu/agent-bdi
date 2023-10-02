@@ -9,7 +9,7 @@ import whisper
 import torch
 
 from src.holon.HolonicAgent import HolonicAgent
-from src.holon import config, logger
+from src.holon import AbdiConfig, logger
 import guide_config
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -38,7 +38,7 @@ class Transcriptionist(HolonicAgent):
                 file.write(msg.payload)
             self.wave_queue.put(wave_path)
         elif "trans.test" == msg.topic:
-            self.publish("trans.test", 'publish ')
+            self._publish("trans.test", 'publish ')
 
 
     def _run_begin(self):
@@ -49,7 +49,7 @@ class Transcriptionist(HolonicAgent):
 
     def _running(self):
         global whisper_model
-        while self.is_running():
+        while self._is_running():
             if self.wave_queue.empty():
                 time.sleep(.1)
                 continue
@@ -61,7 +61,7 @@ class Transcriptionist(HolonicAgent):
                 # transcribed_text = str(result["text"].encode('utf-8'))[2:-1].strip()
                 transcribed_text = result["text"]
                 # logging.debug(f'running addr: {self._config.mqtt_address}')
-                self.publish("hearing.trans.text", transcribed_text)        
+                self._publish("hearing.trans.text", transcribed_text)        
                 logger.info(f">>> \033[33m{transcribed_text}\033[0m")
                 if os.path.exists(wave_path):
                     os.remove(wave_path)

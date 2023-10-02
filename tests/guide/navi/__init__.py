@@ -31,7 +31,7 @@ class Navigator(HolonicAgent):
 
     def __speak(self, sentence):
         logger.info(f"Say: '{sentence}'")
-        self.publish('voice.text', sentence)
+        self._publish('voice.text', sentence)
 
 
     def __set_state(self, new_state):
