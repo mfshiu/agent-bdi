@@ -105,11 +105,6 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
 
     def _run(self, config:AbdiConfig):
-        # logger = helper.get_logger()
-        # logger.debug(f"xxx")
-        # print("aaaa", flush=True)
-        logger.warning("A"*100)
-
         self.config = config
         self._run_begin()
         self._running()
