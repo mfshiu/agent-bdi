@@ -11,18 +11,18 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
+import logging
+
 from abdi_config import AbdiConfig
 from broker.notifier import BrokerNotifier
 from broker.broker_maker import BrokerMaker
 from core.Agent import Agent
-import helper
 from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
 
 
-logger = helper.get_logger()
-
+logger = logging.getLogger("ABDI")
 
 # def callback_with_error():
 #     print("This callback will throw an error.")
@@ -49,8 +49,6 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
 
     def start(self, head=False):
-        logger.debug(f"...")
-        
         self._agent_proc = Process(target=self._run, args=(self.config,))
         self._agent_proc.start()
         
@@ -110,6 +108,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         # logger = helper.get_logger()
         # logger.debug(f"xxx")
         # print("aaaa", flush=True)
+        logger.warning("A"*100)
 
         self.config = config
         self._run_begin()
@@ -127,20 +126,21 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
         self._terminate_lock = threading.Event()
         
+        logger.debug(f"Run begin ...1")
         def interval_loop():
             while not self._terminate_lock.is_set():
                 self._run_interval()
                 time.sleep(self.run_interval_seconds)
         threading.Thread(target=interval_loop).start()
         
+        logger.debug(f"Run begin ...2")
         if broker_type := self.config.get_broker_type():
             self._broker = BrokerMaker().create_broker(
                 broker_type=broker_type, 
                 notifier=self)
             self._broker.start(options=self.config.options)
             
-        while not self._terminate_lock.is_set():
-            self._terminate_lock.wait(1)
+        logger.debug(f"Run begin ...4")
 
 
     def _run_interval(self):
@@ -152,6 +152,10 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
     def _run_end(self):
         logger.debug(f"Run end ...")
+
+        while not self._terminate_lock.is_set():
+            self._terminate_lock.wait(1)
+
         self._broker.stop() 
 
 

@@ -2,10 +2,9 @@ from paho.mqtt.client import Client
 
 from broker.message_broker import MessageBroker
 from broker.notifier import BrokerNotifier
-import helper
+import logging
 
-
-logger = helper.get_logger()
+logger = logging.getLogger("ABDI")
 
 
 class MqttBroker(MessageBroker):
@@ -20,7 +19,7 @@ class MqttBroker(MessageBroker):
 
     def _on_connect(self, client:Client, userdata, flags, rc):
         logger.info(f"MQTT broker connected. url: {self.host}, port: {self.port}, keepalive: {self.keepalive}")
-        logger.debug(f"Client: {client}\nuserdata:{userdata}\nflags: {flags}\nrc: {rc}")
+        # logger.debug(f"Client: {client}\nuserdata:{userdata}\nflags: {flags}\nrc: {rc}")
         self._notifier._on_connect()
         
 

@@ -1,9 +1,10 @@
+import logging
+
 from broker.message_broker import MessageBroker
 from broker.notifier import BrokerNotifier
-import helper
 
 
-logger = helper.get_logger()
+logger = logging.getLogger("ABDI")
 
 
 class EmptyBroker(MessageBroker):
