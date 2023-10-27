@@ -121,19 +121,19 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
         self._terminate_lock = threading.Event()
         
-        logger.debug(f"start interval_loop")
-        def interval_loop():
-            while not self._terminate_lock.is_set():
-                self._run_interval()
-                time.sleep(self.run_interval_seconds)
-        threading.Thread(target=interval_loop).start()
-        
         logger.debug(f"create broker")
         if broker_type := self.config.get_broker_type():
             self._broker = BrokerMaker().create_broker(
                 broker_type=broker_type, 
                 notifier=self)
             self._broker.start(options=self.config.options)
+        
+        logger.debug(f"start interval_loop")
+        def interval_loop():
+            while not self._terminate_lock.is_set():
+                self._run_interval()
+                time.sleep(self.run_interval_seconds)
+        threading.Thread(target=interval_loop).start()
             
         logger.debug(f"done.")
 
