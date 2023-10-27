@@ -39,11 +39,11 @@ class RosNoeticBroker(MessageBroker):
         publisher = self.publishers.get(topic_key)
         if not publisher:
             if "str" == type_name:
-                publisher = rospy.Publisher('topic', String, queue_size=10)
+                publisher = rospy.Publisher(topic, String, queue_size=10)
             elif "int" == type_name:
-                publisher = rospy.Publisher('topic', Int32, queue_size=10)
+                publisher = rospy.Publisher(topic, Int32, queue_size=10)
             elif "bytes" == type_name:
-                publisher = rospy.Publisher('topic', UInt8MultiArray, queue_size=10)
+                publisher = rospy.Publisher(topic, UInt8MultiArray, queue_size=10)
             else:
                 raise TypeError(f"Unsupported data type: {type_name}")
             
