@@ -19,6 +19,20 @@ class RosNoeticBroker(MessageBroker):
         super().__init__(notifier=notifier)
 
 
+    def _on_data(self, data):
+        self._notifier._on_message(message)
+
+        data = message.payload.decode('utf-8', 'ignore')
+        self._notifier._on_topic(message.topic, data)
+
+
+    def _on_message(self, message):
+        self._notifier._on_message(message)
+
+        data = message.payload.decode('utf-8', 'ignore')
+        self._notifier._on_topic(message.topic, data)
+
+
 
     ###################################
     # Implementation of MessageBroker #
@@ -60,5 +74,20 @@ class RosNoeticBroker(MessageBroker):
         publisher.publish(payload)
         
     
-    def subscribe(self, topic:str):
-        logger.info(f"topic: {topic}")
+    def _callback_with_topic(self, topic_name):
+        def callback(data):
+            rospy.loginfo(f"Received on topic {topic_name}, data.data: {data.data}")
+        return callback
+
+
+    def subscribe(self, topic:str, data_type):
+        logger.info(f"topic: {topic}, , data_type: {data_type}")
+        
+        if "str" == data_type:
+            rospy.Subscriber(topic, String, self._callback_with_topic(topic))
+        elif "int" == data_type:
+            rospy.Subscriber(topic, Int32, self._callback_with_topic(topic))
+        elif "bytes" == data_type:
+            rospy.Subscriber(topic, UInt8MultiArray, self._callback_with_topic(topic))
+        else:
+            raise TypeError(f"Unsupported data type: {data_type}")

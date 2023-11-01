@@ -158,8 +158,8 @@ class HolonicAgent(Agent, BrokerNotifier) :
         return self._broker.publish(topic, payload)
 
 
-    def _subscribe(self, topic):
-        return self._broker.subscribe(topic)
+    def _subscribe(self, topic, data_type="str"):
+        return self._broker.subscribe(topic, data_type)
         
 
     def _terminate(self):

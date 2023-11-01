@@ -23,5 +23,5 @@ class MessageBroker(ABC):
         
     
     @abstractmethod
-    def subscribe(self, topic:str):
+    def subscribe(self, topic:str, data_type):
         """Subscribe the topic."""

@@ -32,5 +32,5 @@ class EmptyBroker(MessageBroker):
         logger.info(f"topic: {topic}, payload: {payload}")
         
     
-    def subscribe(self, topic:str):
-        logger.info(f"topic: {topic}")
+    def subscribe(self, topic:str, data_type):
+        logger.info(f"topic: {topic}, data_type: {data_type}")

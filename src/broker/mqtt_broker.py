@@ -21,7 +21,7 @@ class MqttBroker(MessageBroker):
         logger.info(f"MQTT broker connected. url: {self.host}, port: {self.port}, keepalive: {self.keepalive}")
         # logger.debug(f"Client: {client}\nuserdata:{userdata}\nflags: {flags}\nrc: {rc}")
         self._notifier._on_connect()
-        
+
 
     def _on_message(self, client:Client, db, message):
         self._notifier._on_message(message)
@@ -64,5 +64,5 @@ class MqttBroker(MessageBroker):
         return self._client.publish(topic=topic, payload=payload)
         
     
-    def subscribe(self, topic:str):
+    def subscribe(self, topic:str, data_type):
         return self._client.subscribe(topic=topic)

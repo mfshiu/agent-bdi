@@ -32,5 +32,5 @@ class RedisBroker(MessageBroker):
         logger.info(f"topic: {topic}, payload: {payload}")
         
     
-    def subscribe(self, topic:str):
+    def subscribe(self, topic:str, data_type):
         logger.info(f"topic: {topic}")
