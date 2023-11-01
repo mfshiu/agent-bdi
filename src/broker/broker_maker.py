@@ -2,8 +2,8 @@ from broker import BrokerType
 from broker.empty_broker import EmptyBroker
 from broker.mqtt_broker import MqttBroker
 from broker.redis_broker import RedisBroker
-# from broker.ros_broker import RosBroker
-from broker.ros_noetic_broker import RosNoeticBroker
+from broker.ros_broker import RosBroker
+# from broker.ros_noetic_broker import RosNoeticBroker
 from broker.notifier import BrokerNotifier
 
 
@@ -14,7 +14,9 @@ class BrokerMaker():
         elif broker_type is BrokerType.MQTT:
             return MqttBroker(notifier)
         elif broker_type is BrokerType.ROS:
-            return RosNoeticBroker(notifier)
+            return RosBroker(notifier)
+        # elif broker_type is BrokerType.ROS:
+        #     return RosNoeticBroker(notifier)
         elif broker_type is BrokerType.Empty:
             return EmptyBroker(notifier)
         else:
