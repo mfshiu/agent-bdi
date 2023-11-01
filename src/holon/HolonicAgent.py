@@ -189,14 +189,14 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self._subscribe("terminate")
 
 
-    def _on_message(self, message):
+    def _on_message(self, topic:str, payload):
         pass
 
 
-    def _on_topic(self, topic, data):
-        if "terminate" == topic:
-            if data:
-                if type(self).__name__ == data:
-                    self._terminate()
-            else:
-                self._terminate()
+    # def _on_topic(self, topic, data):
+    #     if "terminate" == topic:
+    #         if data:
+    #             if type(self).__name__ == data:
+    #                 self._terminate()
+    #         else:
+    #             self._terminate()

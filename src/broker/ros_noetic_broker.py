@@ -12,25 +12,10 @@ logger = logging.getLogger("ABDI")
 
 class RosNoeticBroker(MessageBroker):
     def __init__(self, notifier:BrokerNotifier):
-        
         self.pub = rospy.Publisher('chatter', String, queue_size=10)
         self.publishers = {}
         
         super().__init__(notifier=notifier)
-
-
-    def _on_data(self, data):
-        self._notifier._on_message(message)
-
-        data = message.payload.decode('utf-8', 'ignore')
-        self._notifier._on_topic(message.topic, data)
-
-
-    def _on_message(self, message):
-        self._notifier._on_message(message)
-
-        data = message.payload.decode('utf-8', 'ignore')
-        self._notifier._on_topic(message.topic, data)
 
 
 
@@ -74,15 +59,17 @@ class RosNoeticBroker(MessageBroker):
         publisher.publish(payload)
         
     
-    def _callback_with_topic(self, topic_name):
+    def _callback_with_topic(self, topic):
         def callback(data):
-            rospy.loginfo(f"Received on topic {topic_name}, data.data: {data.data}")
+            self._notifier._on_message(topic, data)
+            rospy.loginfo(f"Received on topic {topic}, data.data: {data.data}")
+
         return callback
 
 
     def subscribe(self, topic:str, data_type):
         logger.info(f"topic: {topic}, , data_type: {data_type}")
-        
+
         if "str" == data_type:
             rospy.Subscriber(topic, String, self._callback_with_topic(topic))
         elif "int" == data_type:

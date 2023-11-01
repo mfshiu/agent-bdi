@@ -13,10 +13,5 @@ class BrokerNotifier(ABC):
         
     
     @abstractmethod
-    def _on_message(self, message):        
+    def _on_message(self, topic:str, payload):        
         """Called when a message comes in."""
-        
-    
-    @abstractmethod
-    def _on_topic(self, topic, data):        
-        """Called when a subscribed topic comes in."""
