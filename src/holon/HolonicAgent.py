@@ -200,3 +200,19 @@ class HolonicAgent(Agent, BrokerNotifier) :
     #                 self._terminate()
     #         else:
     #             self._terminate()
+
+
+
+# ==================================
+#  Others operation 
+# ==================================
+
+
+    def _convert_to_text(self, payload) -> str:
+        if payload:
+            data = payload.decode('utf-8', 'ignore')
+        else:
+            data = None
+        
+        return data
+        

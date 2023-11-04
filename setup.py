@@ -5,7 +5,7 @@ with open("README.md", "r", encoding = "utf-8") as fh:
 
 setuptools.setup(
     name = "agent-bdi",
-    version = "2.0.0",
+    version = "2.0.3",
     author = "Ming Fang Shiu",
     author_email='avatar.xu@gmail.com',
     description='Agent BDI framework',
@@ -20,7 +20,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    package_dir = {"": "src"},
-    packages = setuptools.find_packages(where="src"),
+    # package_dir = {"": "src"},
+    # packages = setuptools.find_packages(where="src"),
     python_requires = ">=3.9"
 )
