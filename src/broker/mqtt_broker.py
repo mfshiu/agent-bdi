@@ -24,10 +24,10 @@ class MqttBroker(MessageBroker):
 
 
     def _on_message(self, client:Client, db, message):
-        self._notifier._on_message(message.topic, message.payload)
-
-        # data = message.payload.decode('utf-8', 'ignore')
-        # self._notifier._on_topic(message.topic, data)
+        try:
+            self._notifier._on_message(message.topic, message.payload)
+        except Exception as ex:
+            logger.exception(ex)
 
 
 

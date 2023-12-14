@@ -215,4 +215,15 @@ class HolonicAgent(Agent, BrokerNotifier) :
             data = None
         
         return data
+    
+    
+    def decode(self, payload):
+        try:
+            data = payload.decode('utf-8', 'ignore')
+        except Exception as ex:
+            logger.error(f"Type: {type(ex)}")
+            logger.exception(ex)
+            data = ""
+            
+        return data.strip()
         
