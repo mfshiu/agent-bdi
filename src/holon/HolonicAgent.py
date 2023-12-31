@@ -6,7 +6,6 @@ import signal
 import sys
 import threading
 import time 
-import uuid
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -21,7 +20,7 @@ from core.Agent import Agent
 from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
-from holon.payload_wrapper import PayloadWrapper
+# from holon.payload_wrapper import PayloadWrapper
 
 
 logger = logging.getLogger("ABDI")
@@ -40,7 +39,6 @@ class HolonicAgent(Agent, BrokerNotifier) :
         i = i or HolonicIntention()
         super().__init__(b, d, i)
         
-        self.uuid = str(uuid.uuid1()).replace('-', '')
         self.config = config if config else AbdiConfig(options={})
         self.head_agents = []
         self.body_agents = []
@@ -49,7 +47,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self.name = f'<{self.__class__.__name__}>'
         self._agent_proc = None        
         self._broker = None
-        self._payload_wrapper = PayloadWrapper(self.uuid)
+        self._topic_handlers = {}
 
 
     def start(self, head=False):
@@ -132,15 +130,18 @@ class HolonicAgent(Agent, BrokerNotifier) :
         return self._broker.publish(topic, payload)
 
 
-    def publish(self, topic, payload=None):
-        if payload:
-            wapped_payload = self._payload_wrapper.wrap(payload)
-            return self._publish(topic, wapped_payload)
-        else:
-            return self._publish(topic, payload)
+    # def publish(self, topic, payload=None):
+    #     if payload:
+    #         wapped_payload = self._payload_wrapper.wrap(payload)
+    #         return self._publish(topic, wapped_payload)
+    #     else:
+    #         return self._publish(topic, payload)
 
 
-    def _subscribe(self, topic, data_type="str"):
+    def _subscribe(self, topic, data_type="str", topic_handler=None):
+        if topic_handler:
+            logger.debug(f"Add topic handler: {topic}")
+            self._topic_handlers[topic] = topic_handler
         return self._broker.subscribe(topic, data_type)
         
 
@@ -172,16 +173,8 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
 
     def _on_message(self, topic:str, payload):
-        pass
-
-
-    # def _on_topic(self, topic, data):
-    #     if "terminate" == topic:
-    #         if data:
-    #             if type(self).__name__ == data:
-    #                 self._terminate()
-    #         else:
-    #             self._terminate()
+        if topic in self._topic_handlers:
+            self._topic_handlers[topic](topic, payload)
 
 
 
