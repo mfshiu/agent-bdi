@@ -6,6 +6,7 @@ import signal
 import sys
 import threading
 import time 
+import uuid
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -20,6 +21,7 @@ from core.Agent import Agent
 from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
+from holon.payload_wrapper import PayloadWrapper
 
 
 logger = logging.getLogger("ABDI")
@@ -38,26 +40,22 @@ class HolonicAgent(Agent, BrokerNotifier) :
         i = i or HolonicIntention()
         super().__init__(b, d, i)
         
+        self.uuid = str(uuid.uuid1()).replace('-', '')
         self.config = config if config else AbdiConfig(options={})
         self.head_agents = []
         self.body_agents = []
         self.run_interval_seconds = 1
         
-        self.name = f'<{self.__class__.__name__}>'        
+        self.name = f'<{self.__class__.__name__}>'
         self._agent_proc = None        
         self._broker = None
+        self._payload_wrapper = PayloadWrapper(self.uuid)
 
 
     def start(self, head=False):
         self._agent_proc = Process(target=self._run, args=(self.config,))
         self._agent_proc.start()
         
-        # procs = [self._agent_proc]
-
-        # for a in self.head_agents:
-        #     procs.append(a.start())
-        # for a in self.body_agents:
-        #     procs.append(a.start())
         for a in self.head_agents:
             a.start()
         for a in self.body_agents:
@@ -68,30 +66,6 @@ class HolonicAgent(Agent, BrokerNotifier) :
                 self._agent_proc.join()
             except:
                 logger.warning(f"{self.name} terminated.")
-        # if head:
-        #     try:
-        #         self._agent_proc.join()
-        #         # for proc in procs:
-        #         #     proc.join()
-        #     except:
-        #         logger.warning(f"System terminated.")
-        #     return None
-        # else:
-        #     return self._agent_proc
-
-
-    # def start(self):
-    #     logger.debug(f"...")
-        
-    #     self._agent_proc = Process(target=self._run, args=(self.config,))
-    #     self._agent_proc.start()
-
-    #     for a in self.head_agents:
-    #         a.start()
-    #     for a in self.body_agents:
-    #         a.start()
-            
-    #     return self._agent_proc
 
 
 
@@ -154,8 +128,16 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self._broker.stop() 
 
 
-    def _publish(self, topic, payload=None):
+    def _publish(self, topic, payload=None):        
         return self._broker.publish(topic, payload)
+
+
+    def publish(self, topic, payload=None):
+        if payload:
+            wapped_payload = self._payload_wrapper.wrap(payload)
+            return self._publish(topic, wapped_payload)
+        else:
+            return self._publish(topic, payload)
 
 
     def _subscribe(self, topic, data_type="str"):
