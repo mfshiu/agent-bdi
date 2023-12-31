@@ -43,7 +43,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self.body_agents = []
         self.run_interval_seconds = 1
         
-        self.name = f'<{self.__class__.__name__}>'        
+        self.name = f'<{self.__class__.__name__}>'
         self._agent_proc = None        
         self._broker = None
 
