@@ -7,6 +7,7 @@ import sys
 import threading
 import time 
 from typing import final
+import uuid
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -21,9 +22,11 @@ from core.Agent import Agent
 from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
+from holon.head_wrapper import HeadWrapper
 
 
 logger = logging.getLogger(LOGGER_NAME)
+head = HeadWrapper()
 
 # def callback_with_error():
 #     print("This callback will throw an error.")
@@ -39,6 +42,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         i = i or HolonicIntention()
         super().__init__(b, d, i)
         
+        self.agent_id = None
         self.config = config if config else AbdiConfig(options={})
         self.head_agents = []
         self.body_agents = []
@@ -66,6 +70,9 @@ class HolonicAgent(Agent, BrokerNotifier) :
             except:
                 logger.warning(f"{self.name} terminated.")
 
+    
+    def wrap_head(self, payload):
+        return head.wrap(payload)
 
 
 # =====================
@@ -92,6 +99,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
             self.terminate()
         signal.signal(signal.SIGINT, signal_handler)
 
+        self.agent_id = str(uuid.uuid1()).replace("-", "")
         self._terminate_lock = threading.Event()
         
         logger.debug(f"create broker")
@@ -206,7 +214,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self.on_connected()
             
             
-    def on_connected():
+    def on_connected(self):
         pass
 
 

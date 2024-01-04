@@ -1,16 +1,19 @@
+import json
 import uuid
 
 
+VERSION = "1"
 WRAPPER_HEAD = "950f7f7ba7c111eea5c4ff9ca9F3fcfd"
 # WRAPPER_HEAD = "950f7f7b"
 WRAPPER_HEAD_LENGTH = len(WRAPPER_HEAD)
 CALLBACK_ID_LENGTH = 32
 
 
-class PayloadWrapper:
-    def __init__(self):
-        self.binary_wrapper = BinaryWrapper(self.agent_uuid)
-        self.text_wrapper = TextWrapper(self.agent_uuid)
+class HeadWrapper:
+    def __init__(self, agent_id:str):
+        self.binary_wrapper = BinaryWrapper(self.agent_id)
+        self.text_wrapper = TextWrapper(self.agent_id)
+        self.agent_id = agent_id
         self.__callbacks = {}
         
 
@@ -33,18 +36,14 @@ class PayloadWrapper:
 
         
         
-    def wrap(self, payload, topic_wait=None, topic_callback=None):
-        if not (topic_wait and topic_callback):
-            return payload
-                    
-        payload1 = payload
+    def wrap(self, payload):
         wrapper = self._get_payload_wrapper(payload)
         if wrapper:
-            callback_id = str(uuid.uuid1()).replace('-', '')
-            payload1 = wrapper.wrap(payload, callback_id)
-            self.__callbacks[callback_id] = topic_callback
+            payload_resp = wrapper.wrap(payload)
+        else:
+            payload_resp = payload
 
-        return payload1
+        return payload_resp
         
         
 
@@ -59,8 +58,8 @@ class BinaryWrapper:
 
             
 class TextWrapper:
-    def __init__(self):
-        pass
+    def __init__(self, agent_id):
+        self.agent_id = agent_id
         
         
     def unpack(self, payload) -> (str, str):
@@ -75,8 +74,13 @@ class TextWrapper:
             return payload, None
                 
         
-    def wrap(self, payload, callback_id) -> str:
+    def wrap_for_send(self, payload) -> str:
+        resp_json = {
+            "version": VERSION,
+            "sender": self.agent_id
+        }
         if payload:
-            return f"{WRAPPER_HEAD}{callback_id}{payload}"
-        else:
-            return f"{WRAPPER_HEAD}{callback_id}"
+            resp_json["content"] = payload
+
+        resp = f"{WRAPPER_HEAD}{json.dumps(resp_json)}"
+        return resp

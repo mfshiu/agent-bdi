@@ -2,56 +2,59 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import logging
+import multiprocessing
 from multiprocessing import Process
 import signal
 import threading
 import time
 
-from src.holon.HolonicAgent import HolonicAgent
+from holon.HolonicAgent import HolonicAgent
+
+import json
+# from opencc import OpenCC
+
+import helper
+from holon.HolonicAgent import HolonicAgent
+
+from abdi_config import AbdiConfig
+
+logger = helper.get_logger()
+
 
 class TestAgent(HolonicAgent):
     def __init__(self, cfg):
         super().__init__(cfg)
 
-def proc_run():
-    def signal_handler(signal, frame):
-        print("signal_handler 1")
-        _terminate_lock.set()
-        exit(0)
-    signal.signal(signal.SIGINT, signal_handler)
 
-    _terminate_lock = threading.Event()
-    while not _terminate_lock.is_set():
-        _terminate_lock.wait(1)
-    # _terminate_lock.wait()
-    # while not _terminate_lock.is_set():
-    #     time.sleep(0.1)
-    # while True:
-    #     time.sleep(0.1)
+    def on_connected(self):
+        self.subscribe("test.start")
+        # self.subscribe("doc.text.import", "str", self.handle_doc_text_import)
+        pass
+
+
+    def handle_doc_text_import(self, topic:str, payload):
+        text = payload.decode('utf-8', 'ignore')
+        file_info = json.loads(text)
+        file_text = file_info['text']
+        logger.info(f"topic: {topic}, Prep text: {file_text.encode('utf-8')}")
+
+
+    def on_message(self, topic:str, payload):
+        if "test.start" == topic:
+            logger.debug("Got: test.start")
+            self.publish("test.send", self.wrap_head("【前進新台灣 PART2】"))
+
 
 if __name__ == '__main__':
-    # Helper.init_logging()
-    # logging.info('***** Main start *****')
     print('***** Test start *****')
 
-    # def signal_handler(signal, frame):
-    #     a.terminate()
-    #     print('***** TestAgent stop *****')
-    #     exit(0)
-    # signal.signal(signal.SIGINT, signal_handler)
     def signal_handler(signal, frame):
         print("signal_handler")
         # exit(0)
     signal.signal(signal.SIGINT, signal_handler)
 
-    a = TestAgent()
-    a.start()
-    # p = Process(target=proc_run)
-    # p.start()
-    # p1 = Process(target=proc_run)
-    # p1.start()
+    multiprocessing.set_start_method('spawn')
+
+    TestAgent(AbdiConfig(helper.get_config())).start()
 
     print('***** Test STOP *****')
-
-    # while True:
-    #     time.sleep(1)

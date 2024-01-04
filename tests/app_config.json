@@ -1,0 +1,21 @@
+{
+    "broker_type": "MQTT",
+    "broker_type1": "ROS",
+    "host": "mqtt.gigoo.co",
+    "port": 1883,
+    "keepalive": 60,
+    "username": "eric",
+    "password": "eric123",
+
+    "log_level": "DEBUG",
+    "log_path": "_log/chatpal.log",
+
+    "input_dir": "_input",
+    "output_dir": "_output",
+    "upload_dir": "/Users/xumingfang/Work/Temp",
+
+    "openai_api_key": "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",
+
+    "playht_user_id": "RAE0rqSL3GRV3xgSEj4l33BTVC23",
+    "playht_secret_key": "25c86565a13e41e6baba3979c8f90c5a"
+}
