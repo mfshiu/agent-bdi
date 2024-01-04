@@ -23,13 +23,13 @@ class Controller(HolonicAgent):
     def _on_topic(self, topic, data):
         if "dialog.knowledge" == topic:
             if self.active_subject:
-                self._publish(f'{self.active_subject}.knowledge', data)
+                self.publish(f'{self.active_subject}.knowledge', data)
             else:
                 knowledge = ast.literal_eval(data)
                 if (subject := knowledge[0][0]) in self.registered_subjects:
                     self.active_subject = subject
                     logger.info(f"Active subject: {self.active_subject}")
-                    self._publish(f'{self.active_subject}.knowledge', data)
+                    self.publish(f'{self.active_subject}.knowledge', data)
                 else:
                     logger.warning(f"Uknown subject: {subject}")
         elif "brain.register_subject" == topic:

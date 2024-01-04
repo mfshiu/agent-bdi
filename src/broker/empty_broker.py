@@ -2,9 +2,10 @@ import logging
 
 from broker.message_broker import MessageBroker
 from broker.notifier import BrokerNotifier
+from abdi_config import LOGGER_NAME
 
 
-logger = logging.getLogger("ABDI")
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class EmptyBroker(MessageBroker):

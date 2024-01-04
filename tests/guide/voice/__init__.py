@@ -31,7 +31,7 @@ class Voice(HolonicAgent):
                 self.tts.tts_to_file(text=data, file_path=filepath)
                 with open(filepath, "rb") as file:
                     file_content = file.read()
-                self._publish("voice.wave", file_content)
+                self.publish("voice.wave", file_content)
                 os.remove(filepath)
             except Exception as ex:
                 logger.exception(ex)

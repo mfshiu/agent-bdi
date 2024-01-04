@@ -40,7 +40,7 @@ class GuideMain(HolonicAgent):
     def _on_topic(self, topic, data):
         if "guide.hearing.heared_text" == topic:
             if '系統關機' in data:
-                self._terminate()
+                self.terminate()
         # elif "dialog.nlu.triplet" == topic:
         #     logging.info(f'### {data} ###')
 

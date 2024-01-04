@@ -3,8 +3,10 @@ from paho.mqtt.client import Client
 from broker.message_broker import MessageBroker
 from broker.notifier import BrokerNotifier
 import logging
+from abdi_config import LOGGER_NAME
 
-logger = logging.getLogger("ABDI")
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class MqttBroker(MessageBroker):

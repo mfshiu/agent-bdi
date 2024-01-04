@@ -15,7 +15,7 @@ class Greeting(HolonicAgent):
         client.subscribe("greeting.knowledge")
 
         # self.publish('brain.register_subject', 'greeting')
-        threading.Timer(1, lambda: self._publish('brain.register_subject', 'greeting')).start()
+        threading.Timer(1, lambda: self.publish('brain.register_subject', 'greeting')).start()
         super()._on_connect(client, userdata, flags, rc)
 
 
@@ -28,11 +28,11 @@ class Greeting(HolonicAgent):
                 brain_helper.speak(self, f'Wonderful, very nice to meet you.')
             else:
                 logger.info(f'Uknown greeting mood.')
-            self._publish('brain.subject_done')
+            self.publish('brain.subject_done')
 
         super()._on_topic(topic, data)
 
 
-    def _terminate(self):
-        self._publish('brain.unregister_subject', 'greeting')
-        super()._terminate()
+    def terminate(self):
+        self.publish('brain.unregister_subject', 'greeting')
+        super().terminate()

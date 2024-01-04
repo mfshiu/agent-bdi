@@ -6,6 +6,7 @@ import signal
 import sys
 import threading
 import time 
+from typing import final
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -13,17 +14,16 @@ sys.path.insert(0, parentdir)
 
 import logging
 
-from abdi_config import AbdiConfig
+from abdi_config import AbdiConfig, LOGGER_NAME
 from broker.notifier import BrokerNotifier
 from broker.broker_maker import BrokerMaker
 from core.Agent import Agent
 from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
-# from holon.payload_wrapper import PayloadWrapper
 
 
-logger = logging.getLogger("ABDI")
+logger = logging.getLogger(LOGGER_NAME)
 
 # def callback_with_error():
 #     print("This callback will throw an error.")
@@ -42,7 +42,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self.config = config if config else AbdiConfig(options={})
         self.head_agents = []
         self.body_agents = []
-        self.run_interval_seconds = 1
+        self.__run_interval_seconds = 1
         
         self.name = f'<{self.__class__.__name__}>'
         self._agent_proc = None        
@@ -50,6 +50,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self._topic_handlers = {}
 
 
+    @final
     def start(self, head=False):
         self._agent_proc = Process(target=self._run, args=(self.config,))
         self._agent_proc.start()
@@ -72,7 +73,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
 # =====================
 
 
-    def _is_running(self):
+    def is_running(self):
         return not self._terminate_lock.is_set()
 
 
@@ -84,11 +85,11 @@ class HolonicAgent(Agent, BrokerNotifier) :
     
 
     def _run_begin(self):
-        logger.debug(f"start")
+        self.on_begining()
 
         def signal_handler(signal, frame):
             logger.warning(f"{self.name} Ctrl-C: {self.__class__.__name__}")
-            self._terminate()
+            self.terminate()
         signal.signal(signal.SIGINT, signal_handler)
 
         self._terminate_lock = threading.Event()
@@ -103,30 +104,61 @@ class HolonicAgent(Agent, BrokerNotifier) :
         logger.debug(f"start interval_loop")
         def interval_loop():
             while not self._terminate_lock.is_set():
-                self._run_interval()
-                time.sleep(self.run_interval_seconds)
+                self.on_interval()
+                time.sleep(self.__run_interval_seconds)
         threading.Thread(target=interval_loop).start()
             
-        logger.debug(f"done.")
+        self.on_began()
+        
+        
+    def get_run_interval(self):
+        return self.__run_interval_seconds
+        
+        
+    def set_run_interval(self, seconds):
+        self.__run_interval_seconds = seconds
 
 
-    def _run_interval(self):
+    def on_begining(self):
+        pass
+
+
+    def on_began(self):
+        pass
+
+
+    def on_interval(self):
         pass
 
 
     def _running(self):
-        logger.debug(f"Running ...")
+        self.on_running()
+
+
+    def on_running(self):
+        pass
+
 
     def _run_end(self):
-        logger.debug(f"Run end ...")
+        self.on_terminating()
 
         while not self._terminate_lock.is_set():
             self._terminate_lock.wait(1)
-
         self._broker.stop() 
+        
+        self.on_terminated()
 
 
-    def _publish(self, topic, payload=None):        
+    def on_terminating(self):
+        pass
+
+
+    def on_terminated(self):
+        pass
+
+
+    @final
+    def publish(self, topic, payload=None):
         return self._broker.publish(topic, payload)
 
 
@@ -137,24 +169,25 @@ class HolonicAgent(Agent, BrokerNotifier) :
     #     else:
     #         return self._publish(topic, payload)
 
-
-    def _subscribe(self, topic, data_type="str", topic_handler=None):
+    @final
+    def subscribe(self, topic, data_type="str", topic_handler=None):
         if topic_handler:
             logger.debug(f"Add topic handler: {topic}")
             self._topic_handlers[topic] = topic_handler
         return self._broker.subscribe(topic, data_type)
         
 
-    def _terminate(self):
+    @final
+    def terminate(self):
         logger.warn(f"{self.name}.")
 
         for a in self.head_agents:
             name = a.__class__.__name__
-            self._publish(topic='terminate', payload=name)
+            self.publish(topic='terminate', payload=name)
 
         for a in self.body_agents:
             name = a.__class__.__name__
-            self._publish(topic='terminate', payload=name)
+            self.publish(topic='terminate', payload=name)
 
         self._terminate_lock.set()
 
@@ -168,13 +201,24 @@ class HolonicAgent(Agent, BrokerNotifier) :
     def _on_connect(self):
         logger.info(f"{self.name} Broker is connected.")
         
-        self._subscribe("echo")
-        self._subscribe("terminate")
+        self.subscribe("echo")
+        self.subscribe("terminate")
+        self.on_connected()
+            
+            
+    def on_connected():
+        pass
 
 
     def _on_message(self, topic:str, payload):
         if topic in self._topic_handlers:
             self._topic_handlers[topic](topic, payload)
+        else:
+            self.on_message(topic, payload)
+            
+            
+    def on_message(self, topic:str, payload):
+        pass
 
 
 
