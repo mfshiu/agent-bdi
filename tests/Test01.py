@@ -1,60 +1,27 @@
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import pickle
 
-import logging
-import multiprocessing
-from multiprocessing import Process
-import signal
-import threading
-import time
+with open("D:\\OneDrive\\圖片\\FXE86F3833C03D_000211.jpg", 'rb') as file:
+    file_content = file.read()
+print(f"file_content: {len(file_content)}")
 
-from holon.HolonicAgent import HolonicAgent
+# Example dictionary to serialize
+data = {
+    "name": "Alice", 
+    "age": 30, 
+    "city": "New York",
+    "image": file_content
+}
 
-import json
-# from opencc import OpenCC
+# Serializing the dictionary to bytes
+serialized_data = pickle.dumps(data)
 
-import helper
-from holon.HolonicAgent import HolonicAgent
+# Deserializing the bytes back to a dictionary
+deserialized_data = pickle.loads(serialized_data)
 
-from abdi_config import AbdiConfig
+# Displaying the results
+# print("Serialized Data:", serialized_data)
+# print("Deserialized Data:", deserialized_data)
 
-logger = helper.get_logger()
-
-
-class TestAgent(HolonicAgent):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-
-    def on_connected(self):
-        self.subscribe("test.start")
-        # self.subscribe("doc.text.import", "str", self.handle_doc_text_import)
-        pass
-
-
-    def handle_doc_text_import(self, topic:str, payload):
-        text = payload.decode('utf-8', 'ignore')
-        file_info = json.loads(text)
-        file_text = file_info['text']
-        logger.info(f"topic: {topic}, Prep text: {file_text.encode('utf-8')}")
-
-
-    def on_message(self, topic:str, payload):
-        if "test.start" == topic:
-            logger.debug("Got: test.start")
-            self.publish("test.send", self.wrap_head("【前進新台灣 PART2】"))
-
-
-if __name__ == '__main__':
-    print('***** Test start *****')
-
-    def signal_handler(signal, frame):
-        print("signal_handler")
-        # exit(0)
-    signal.signal(signal.SIGINT, signal_handler)
-
-    multiprocessing.set_start_method('spawn')
-
-    TestAgent(AbdiConfig(helper.get_config())).start()
-
-    print('***** Test STOP *****')
+print(f"image: {len(deserialized_data['image'])}")
+with open("D:\\Temp\\xxx.jpg", 'wb') as file:
+    file.write(deserialized_data["image"])

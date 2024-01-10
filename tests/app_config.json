@@ -8,7 +8,7 @@
     "password": "eric123",
 
     "log_level": "DEBUG",
-    "log_path": "_log/chatpal.log",
+    "log_path": "_log/entkm.log",
 
     "input_dir": "_input",
     "output_dir": "_output",
