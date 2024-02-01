@@ -183,8 +183,8 @@ class HolonicAgent(Agent, BrokerNotifier) :
         logger.debug(f"receiver: {managed_payload['receiver']}, agent_id: {self.agent_id}")
         if managed_payload["receiver"] == self.agent_id:
             self._on_message(topic, managed_payload["content"])
-        
-    
+
+
     def on_request(self, topic, payload):
         raise NotImplementedError()
         
@@ -246,6 +246,11 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
 
     def _on_message(self, topic:str, payload):
+        self._process_message(topic, payload)
+        
+        
+    @final
+    def _process_message(self, topic:str, payload):
         logger.debug(f"payload: {len(payload)}")
         if payload and self._payload_wrapper.is_request(payload):
             logger.debug("message is_request")
