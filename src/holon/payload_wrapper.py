@@ -21,6 +21,28 @@ class PayloadWrapper:
         self.text_wrapper = TextWrapper(self)
         self.agent_id = agent_id
         
+        
+    def create_response_json(self, response_payload, request_payload):
+        response_json = {
+            "version": VERSION,
+            "request_id": request_payload["request_id"],
+            "receiver": request_payload["sender"]
+        }
+        response_json["content"] = response_payload
+        
+        return response_json
+        
+        
+    def create_request_json(self, payload, request_id):
+        request_json = {
+            "version": VERSION,
+            "request_id": request_id,
+            "sender": self.agent_id
+        }
+        request_json["content"] = payload
+        
+        return request_json
+        
 
     def get_payload_wrapper(self, payload):
         # logger.debug(f"get_payload_wrapper, payload: {payload}, type: {type(payload)}")
@@ -54,7 +76,7 @@ class PayloadWrapper:
         return managed
 
 
-    def unpack(self, payload) -> str:
+    def unpack(self, payload):
         wrapper = self.get_payload_wrapper(payload)
         if wrapper:
             unpacked = wrapper.unpack(payload)
@@ -74,10 +96,10 @@ class PayloadWrapper:
         return payload_resp
 
 
-    def wrap_for_request(self, payload) -> str:
+    def wrap_for_request(self, payload, request_id) -> str:
         wrapper = self.get_payload_wrapper(payload)
         if wrapper:
-            payload_resp = wrapper.wrap_for_request(payload)
+            payload_resp = wrapper.wrap_for_request(payload, request_id)
         else:
             raise Exception("Unsupported payload type.")
 
@@ -94,7 +116,7 @@ class BinaryWrapper:
         return isinstance(payload, bytes) or isinstance(payload, bytearray)
 
         
-    def unpack(self, payload:bytes) -> bytes:
+    def unpack(self, payload:bytes):
         payload_body = payload[len(WRAPPER_REQUEST_HEAD_BYTES):]
         payload_json = pickle.loads(payload_body)
 
@@ -104,37 +126,20 @@ class BinaryWrapper:
         return payload_json
 
 
-    def wrap_for_request(self, payload:bytes) -> bytes:
-        request_json = {
-            "version": VERSION,
-            "sender": self.payload_wrapper.agent_id
-        }
-        request_json["content"] = payload
-        
+    def wrap_for_request(self, payload, request_id) -> bytes:
+        request_json = self.payload_wrapper.create_request_json(payload, request_id)
         request_payload = WRAPPER_REQUEST_HEAD_BYTES + pickle.dumps(request_json)
+        
         return request_payload
      
         
-    def wrap_for_response(self, payload:bytes, managed_request_payload:bytes) -> bytes:
-        receiver_agent_id = managed_request_payload["sender"]
-        request_json = {
-            "version": VERSION,
-            "receiver": receiver_agent_id
-        }
-        request_json["content"] = payload
+    def wrap_for_response(self, response_payload:bytes, managed_request_payload) -> bytes:
+        response_json = self.payload_wrapper.create_response_json(response_payload, managed_request_payload)
+        response_payload = WRAPPER_RESPONSE_HEAD_BYTES + pickle.dumps(response_json)
         
-        request_payload = WRAPPER_RESPONSE_HEAD_BYTES + pickle.dumps(request_json)
-        return request_payload
-        
+        return response_payload
 
-    # def wrap_for_request(self, payload:bytes) -> bytes:
-    #     head_items = [WRAPPER_REQUEST_HEAD_BYTES, 
-    #                    VERSION_BYTES, 
-    #                    self.payload_wrapper.agent_id.encode('utf-8')]
-    #     head_bytes = b''.join(item for item in head_items)
-        
-    #     request_payload = head_bytes + payload
-    #     return request_payload
+
             
 class TextWrapper:
     def __init__(self, payload_wrapper:PayloadWrapper):
@@ -154,33 +159,26 @@ class TextWrapper:
         return acceptable
 
         
-    def unpack(self, payload:str) -> str:
+    def unpack(self, payload:str):
         payload_text = payload.decode('utf-8')
+        logger.debug(f"payload_text: {payload_text}")
         payload_json = json.loads(payload_text[len(WRAPPER_REQUEST_HEAD):])
-        # logger.debug(f"payload_json: {payload_json}")
+        logger.debug(f"payload_json: {payload_json}")
         if VERSION != payload_json["version"]:
             raise Exception("Invalid payload version.")
         return payload_json
 
 
-    def wrap_for_request(self, payload:str) -> str:
-        request_json = {
-            "version": VERSION,
-            "sender": self.payload_wrapper.agent_id
-        }
-        request_json["content"] = payload
-
+    def wrap_for_request(self, payload, request_id) -> str:
+        request_json = self.payload_wrapper.create_request_json(payload, request_id)
+        print(f"request_json: {request_json}")
         request_payload = f"{WRAPPER_REQUEST_HEAD}{json.dumps(request_json)}"
+        
         return request_payload
                 
         
-    def wrap_for_response(self, payload:str, managed_request_payload:str) -> str:
-        receiver_agent_id = managed_request_payload["sender"]
-        resp_json = {
-            "version": VERSION,
-            "receiver": receiver_agent_id
-        }
-        resp_json["content"] = payload
-
-        resp = f"{WRAPPER_RESPONSE_HEAD}{json.dumps(resp_json)}"
-        return resp
+    def wrap_for_response(self, response_payload:str, managed_request_payload) -> str:
+        response_json = self.payload_wrapper.create_response_json(response_payload, managed_request_payload)
+        response_payload = f"{WRAPPER_RESPONSE_HEAD}{json.dumps(response_json)}"
+        
+        return response_payload

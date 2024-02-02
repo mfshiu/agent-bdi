@@ -1,4 +1,4 @@
-# import atexit
+import asyncio
 import inspect
 from multiprocessing import Process
 import os
@@ -172,10 +172,34 @@ class HolonicAgent(Agent, BrokerNotifier) :
         
     @final
     def request(self, topic, payload):
-        logger.debug(f"payload: {len(payload)}")
-        wrapped = self._payload_wrapper.wrap_for_request(payload)
-        # logger.debug(f"wrapped: {len(wrapped)}")
+        print(f"payload: {payload}")
+        request_id = str(uuid.uuid4())
+        wrapped = self._payload_wrapper.wrap_for_request(payload, request_id)
+        print(f"wrapped: {wrapped}")
         self.publish(topic, wrapped)
+        
+        return request_id
+        
+        
+    # global __request_events
+    # __request_events = {}
+    
+    
+    # def _create_event(self, request_id):
+    #     __request_events[request_id] = asyncio.Event()
+    #     return __request_events[request_id]
+        
+        
+    # @final
+    # async def request_async(self, topic, payload):
+    #     logger.debug(f"payload: {len(payload)}")
+    #     request_id = uuid.uuid4()
+    #     wrapped = self._payload_wrapper.wrap_for_request(payload, request_id)
+    #     # logger.debug(f"wrapped: {len(wrapped)}")
+    #     self.publish(topic, wrapped)
+        
+    #     event = self._create_event(request_id)
+    #     await event.wait()
         
     
     def _on_response(self, topic, payload):
@@ -190,18 +214,19 @@ class HolonicAgent(Agent, BrokerNotifier) :
         
     
     def _on_request(self, topic, payload):
-        managed_payload = self._payload_wrapper.unpack(payload)
+        logger.debug(f"topic: {topic}, payload: {payload}")
+        request_payload = self._payload_wrapper.unpack(payload)
 
         handler = self._topic_handlers[topic] if topic in self._topic_handlers else self.on_request
-        response_topic, response_payload = handler(topic, managed_payload["content"])
+        response_topic, response_payload = handler(topic, request_payload["content"])
         logger.debug(f"response_topic: {response_topic}")
         if not response_payload:
             logger.warning(f"response_payload is None or empty.")
         
         if response_topic:
-            managed_payload = self._payload_wrapper.wrap_for_response(response_payload, managed_payload)
+            response_payload = self._payload_wrapper.wrap_for_response(response_payload, request_payload)
             # logger.debug(f"response_payload: {response_payload}, managed_payload: {managed_payload}")
-            self.publish(response_topic, managed_payload)
+            self.publish(response_topic, response_payload)
         
 
     @final
@@ -254,7 +279,8 @@ class HolonicAgent(Agent, BrokerNotifier) :
         logger.debug(f"payload: {len(payload)}")
         if payload and self._payload_wrapper.is_request(payload):
             logger.debug("message is_request")
-            self._on_request(topic, payload)
+            threading.Thread(target=self._on_request, args=(topic, payload)).start()
+            # self._on_request(topic, payload)
         elif payload and self._payload_wrapper.is_response(payload):
             logger.debug(f"message is_response")
             self._on_response(topic, payload)
