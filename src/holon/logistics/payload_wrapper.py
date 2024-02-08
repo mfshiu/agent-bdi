@@ -161,7 +161,7 @@ class TextWrapper:
         
     def unpack(self, payload:str):
         payload_text = payload.decode('utf-8')
-        logger.debug(f"payload_text: {payload_text}")
+        # logger.debug(f"payload_text: {payload_text}")
         payload_json = json.loads(payload_text[len(WRAPPER_REQUEST_HEAD):])
         logger.debug(f"payload_json: {payload_json}")
         if VERSION != payload_json["version"]:
@@ -171,7 +171,7 @@ class TextWrapper:
 
     def wrap_for_request(self, payload, request_id) -> str:
         request_json = self.payload_wrapper.create_request_json(payload, request_id)
-        print(f"request_json: {request_json}")
+        # print(f"request_json: {request_json}")
         request_payload = f"{WRAPPER_REQUEST_HEAD}{json.dumps(request_json)}"
         
         return request_payload

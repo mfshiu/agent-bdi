@@ -22,7 +22,8 @@ from core.Agent import Agent
 from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
-from holon.payload_wrapper import PayloadWrapper
+from holon.logistics.base_logistic import BaseLogistic
+# from holon.logistics.broker_logistic import BrokerLogistic
 from holon.payload import Payload
 
 
@@ -47,7 +48,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self._agent_proc = None        
         self._broker = None
         self._topic_handlers = {}
-        self._payload_wrapper = None
+        self._logistics = None
 
 
     @final
@@ -67,16 +68,21 @@ class HolonicAgent(Agent, BrokerNotifier) :
                 logger.warning(f"{self.name} terminated.")
 
     
-    def unpack(self, payload):
-        if self._payload_wrapper.is_managed(payload):
-            return self._payload_wrapper.unpack(payload)
-        else:
-            return payload
+    # def unpack(self, payload):
+    #     if self._request_logistic.is_managed(payload):
+    #         return self._request_logistic.unpack(payload)
+    #     else:
+    #         return payload
 
 
 # =====================
 #  Instance of Process 
 # =====================
+        
+        
+    def append_logistic(self, logistic:BaseLogistic):
+        self._logistics.append(logistic)
+        return self._logistics
 
 
     def is_running(self):
@@ -100,7 +106,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
         self.agent_id = str(uuid.uuid1()).replace("-", "")
         self._terminate_lock = threading.Event()
-        self._payload_wrapper = PayloadWrapper(self.agent_id)
+        self._logistics = []
         
         logger.debug(f"create broker")
         if broker_type := self.config.get_broker_type():
@@ -163,47 +169,45 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
     def on_terminated(self):
         pass
+    
+    
+    def get_logistic(self, topic:str):
+        if topic.startswith("@request."):
+            return RequestLogistic(self)
+        else:
+            return BrokerLogistic(self)
 
 
     @final
     def publish(self, topic, payload=None):
+        logistic_topic = topic
+        packed_payload = payload
+        
+        for logistic in self._logistics:
+            logistic_topic, packed_payload = logistic.pack(logistic_topic, packed_payload)
+            
+        logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {packed_payload}")
+        return self._broker.publish(logistic_topic, packed_payload)
+        # logistic = self.get_logistic(topic)
+        # packed = logistic.pack(payload)
+        # return self._publish(topic, packed)
+        # return self._broker.publish(topic, payload)
+
+
+    @final
+    def _publish(self, topic, payload=None):
         return self._broker.publish(topic, payload)
         
         
     @final
     def request(self, topic, payload):
-        print(f"payload: {payload}")
-        request_id = str(uuid.uuid4())
-        wrapped = self._payload_wrapper.wrap_for_request(payload, request_id)
-        print(f"wrapped: {wrapped}")
-        self.publish(topic, wrapped)
-        
-        return request_id
-        
-        
-    # global __request_events
-    # __request_events = {}
-    
-    
-    # def _create_event(self, request_id):
-    #     __request_events[request_id] = asyncio.Event()
-    #     return __request_events[request_id]
-        
-        
-    # @final
-    # async def request_async(self, topic, payload):
-    #     logger.debug(f"payload: {len(payload)}")
-    #     request_id = uuid.uuid4()
-    #     wrapped = self._payload_wrapper.wrap_for_request(payload, request_id)
-    #     # logger.debug(f"wrapped: {len(wrapped)}")
-    #     self.publish(topic, wrapped)
-        
-    #     event = self._create_event(request_id)
-    #     await event.wait()
+        # wrapped = self._request_logistic.pack(payload)
+        # self.publish(topic, wrapped)
+        self.publish(f"@request.{topic}", payload)
         
     
     def _on_response(self, topic, payload):
-        managed_payload = self._payload_wrapper.unpack(payload)
+        managed_payload = self._request_logistic.unpack(payload)
         logger.debug(f"receiver: {managed_payload['receiver']}, agent_id: {self.agent_id}")
         if managed_payload["receiver"] == self.agent_id:
             self._on_message(topic, managed_payload["content"])
@@ -215,7 +219,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
     
     def _on_request(self, topic, payload):
         logger.debug(f"topic: {topic}, payload: {payload}")
-        request_payload = self._payload_wrapper.unpack(payload)
+        request_payload = self._request_logistic.unpack(payload)
 
         handler = self._topic_handlers[topic] if topic in self._topic_handlers else self.on_request
         response_topic, response_payload = handler(topic, request_payload["content"])
@@ -224,7 +228,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
             logger.warning(f"response_payload is None or empty.")
         
         if response_topic:
-            response_payload = self._payload_wrapper.wrap_for_response(response_payload, request_payload)
+            response_payload = self._request_logistic.pack_for_response(response_payload, request_payload)
             # logger.debug(f"response_payload: {response_payload}, managed_payload: {managed_payload}")
             self.publish(response_topic, response_payload)
         
@@ -232,9 +236,13 @@ class HolonicAgent(Agent, BrokerNotifier) :
     @final
     def subscribe(self, topic, data_type="str", topic_handler=None):
         if topic_handler:
-            logger.debug(f"Add topic handler: {topic}")
-            self._topic_handlers[topic] = topic_handler
+            self.register_topic_handler(topic, topic_handler)
         return self._broker.subscribe(topic, data_type)
+    
+    
+    def register_topic_handler(self, topic, handler):
+        logger.debug(f"Add topic handler: {topic}")
+        self._topic_handlers[topic] = handler
         
 
     @final
@@ -270,29 +278,33 @@ class HolonicAgent(Agent, BrokerNotifier) :
         pass
 
 
-    def _on_message(self, topic:str, payload):
-        self._process_message(topic, payload)
-        
-        
     @final
-    def _process_message(self, topic:str, payload):
-        logger.debug(f"payload: {len(payload)}")
-        if payload and self._payload_wrapper.is_request(payload):
-            logger.debug("message is_request")
-            threading.Thread(target=self._on_request, args=(topic, payload)).start()
-            # self._on_request(topic, payload)
-        elif payload and self._payload_wrapper.is_response(payload):
-            logger.debug(f"message is_response")
-            self._on_response(topic, payload)
+    def _on_message(self, topic:str, payload):
+        # logger.debug(f"topic: {topic}, payload: {payload}")
+        if topic in self._topic_handlers:
+            self._topic_handlers[topic](topic, payload)
         else:
-            logger.debug(f"unmanaged payload")
-            if topic in self._topic_handlers:
-                self._topic_handlers[topic](topic, payload)
-            else:
-                self.on_message(topic, payload)
+            self.on_message(topic, payload)
+        
+        
+    # def _process_message(self, topic:str, payload):
+    #     logger.debug(f"payload: {len(payload)}")
+    #     if payload and self._request_logistic.is_request(payload):
+    #         logger.debug("message is_request")
+    #         threading.Thread(target=self._on_request, args=(topic, payload)).start()
+    #         # self._on_request(topic, payload)
+    #     elif payload and self._request_logistic.is_response(payload):
+    #         logger.debug(f"message is_response")
+    #         self._on_response(topic, payload)
+    #     else:
+    #         logger.debug(f"unmanaged payload")
+    #         if topic in self._topic_handlers:
+    #             self._topic_handlers[topic](topic, payload)
+    #         else:
+    #             self.on_message(topic, payload)
 
 
-    def on_message(self, topic:str, payload:Payload):
+    def on_message(self, topic:str, payload):
         pass
 
 
