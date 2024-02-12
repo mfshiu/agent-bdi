@@ -191,8 +191,10 @@ class HolonicAgent(Agent, BrokerNotifier) :
     
     def _on_request(self, topic, payload):
         managed_payload = self._payload_wrapper.unpack(payload)
+        logger.debug(f"topic: {topic}, managed_payload: {managed_payload}")
 
         handler = self._topic_handlers[topic] if topic in self._topic_handlers else self.on_request
+        logger.debug(f"handler: {handler}")
         response_topic, response_payload = handler(topic, managed_payload["content"])
         logger.debug(f"response_topic: {response_topic}")
         if not response_payload:
@@ -246,7 +248,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
 
     def _on_message(self, topic:str, payload):
-        logger.debug(f"payload: {len(payload)}")
+        logger.debug(f"payload length: {len(payload)}")
         if payload and self._payload_wrapper.is_request(payload):
             logger.debug("message is_request")
             self._on_request(topic, payload)
