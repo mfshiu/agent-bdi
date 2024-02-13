@@ -236,12 +236,12 @@ class HolonicAgent(Agent, BrokerNotifier) :
     @final
     def subscribe(self, topic, data_type="str", topic_handler=None):
         if topic_handler:
-            self.register_topic_handler(topic, topic_handler)
+            self.set_topic_handler(topic, topic_handler)
         return self._broker.subscribe(topic, data_type)
     
     
-    def register_topic_handler(self, topic, handler):
-        logger.debug(f"Add topic handler: {topic}")
+    def set_topic_handler(self, topic, handler):
+        logger.debug(f"Set topic handler: {topic}")
         self._topic_handlers[topic] = handler
         
 

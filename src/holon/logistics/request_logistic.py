@@ -22,7 +22,7 @@ class RequestLogistic(BaseLogistic):
         self._payload_wrapper = PayloadWrapper(self.agent.agent_id)
         
         if response_handler:
-            self.agent.register_topic_handler(request_topic, response_handler)
+            self.agent.set_topic_handler(request_topic, response_handler)
         
         
     def handle_response(self, topic:str, payload):
