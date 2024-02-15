@@ -1,11 +1,14 @@
 {
     "broker_type": "MQTT",
     "broker_type1": "ROS",
+    "host1": "mqtt.tprai.org",
+    "username1": "entkm",
+    "password1": "Entkm123",
     "host": "mqtt.gigoo.co",
-    "port": 1883,
-    "keepalive": 60,
     "username": "eric",
     "password": "eric123",
+    "port": 1883,
+    "keepalive": 60,
 
     "log_level": "DEBUG",
     "log_path": "_log/entkm.log",

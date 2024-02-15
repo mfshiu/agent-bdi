@@ -13,6 +13,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
+import hashlib
 import logging
 
 from abdi_config import AbdiConfig, LOGGER_NAME
@@ -39,6 +40,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         super().__init__(b, d, i)
         
         self.agent_id = None
+        self.short_id = None
         self.config = config if config else AbdiConfig(options={})
         self.head_agents = []
         self.body_agents = []
@@ -105,6 +107,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         signal.signal(signal.SIGINT, signal_handler)
 
         self.agent_id = str(uuid.uuid1()).replace("-", "")
+        self.short_id = hashlib.md5(self.agent_id.encode()).hexdigest()[:6]
         self._terminate_lock = threading.Event()
         self._logistics = []
         
@@ -282,8 +285,10 @@ class HolonicAgent(Agent, BrokerNotifier) :
     def _on_message(self, topic:str, payload):
         # logger.debug(f"topic: {topic}, payload: {payload}")
         if topic in self._topic_handlers:
+            # logger.debug(f"topic in self._topic_handlers")
             self._topic_handlers[topic](topic, payload)
         else:
+            # logger.debug(f"on_message")
             self.on_message(topic, payload)
         
         
