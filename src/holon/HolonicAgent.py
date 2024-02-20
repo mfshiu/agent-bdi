@@ -1,4 +1,3 @@
-import asyncio
 import inspect
 from multiprocessing import Process
 import os
@@ -48,6 +47,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         
         self.name = f'<{self.__class__.__name__}>'
         self._agent_proc = None        
+        self._agent_thread = None        
         self._broker = None
         self._topic_handlers = {}
         self._logistics = None
@@ -69,12 +69,22 @@ class HolonicAgent(Agent, BrokerNotifier) :
             except:
                 logger.warning(f"{self.name} terminated.")
 
-    
-    # def unpack(self, payload):
-    #     if self._request_logistic.is_managed(payload):
-    #         return self._request_logistic.unpack(payload)
-    #     else:
-    #         return payload
+
+    @final
+    def start_thread(self, head=False):
+        self._agent_thread = threading.Thread(target=self._run, args=(self.config,))
+        self._agent_thread.start()
+        
+        for a in self.head_agents:
+            a.start()
+        for a in self.body_agents:
+            a.start()
+        
+        if head:
+            try:
+                self._agent_thread.join()
+            except:
+                logger.warning(f"{self.name} terminated.")
 
 
 # =====================
@@ -104,7 +114,8 @@ class HolonicAgent(Agent, BrokerNotifier) :
         def signal_handler(signal, frame):
             logger.warning(f"{self.name} Ctrl-C: {self.__class__.__name__}")
             self.terminate()
-        signal.signal(signal.SIGINT, signal_handler)
+        if self._agent_proc:
+            signal.signal(signal.SIGINT, signal_handler)
 
         self.agent_id = str(uuid.uuid1()).replace("-", "")
         self.short_id = hashlib.md5(self.agent_id.encode()).hexdigest()[:6]
