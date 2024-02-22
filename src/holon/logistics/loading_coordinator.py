@@ -1,5 +1,6 @@
 import json
 import logging
+from queue import Queue
 import random
 import threading
 import time
@@ -23,6 +24,7 @@ class LoadingCoordinator(BaseLogistic):
         self.loading_rate = 0
         self.candidates = None
         self.electing = False
+        self.topic_payloads = Queue()
         
         self.agent.subscribe(work_topic, datatype, self.start)
         self.agent.subscribe(f"{HEADER_RANKING}.{work_topic}", datatype, self.rank)
@@ -37,6 +39,7 @@ class LoadingCoordinator(BaseLogistic):
     def start(self, topic:str, payload):
         if self.electing:
             logger.warning(f"electing")
+            self.topic_payloads.put((topic, payload))
             return
         self.electing = True            
         self.reset()
@@ -87,11 +90,19 @@ class LoadingCoordinator(BaseLogistic):
                 self.work_handler(topic, payload)
             else:
                 self.agent.on_message(topic, payload)
+            logger.debug(f"Completed topic: {topic}")
         
         
     def elected(self, topic:str, payload):
         self.electing = False
-        # logger.info(f"Elected agent: {payload.decode()}")
+        elected_agent_id = payload.decode()
+        logger.debug(f"Elected topic: {topic}")
+        
+        if not self.topic_payloads.empty():
+            work = self.topic_payloads.get()
+            if self.agent.agent_id == elected_agent_id:
+                self.agent.publish(topic=work[0], payload=work[1])
+            # self.start(topic=work[0], payload=work[1])
 
 
     def pack(self, topic:str, payload):
