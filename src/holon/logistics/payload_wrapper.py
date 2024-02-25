@@ -163,7 +163,7 @@ class TextWrapper:
         payload_text = payload.decode('utf-8')
         # logger.debug(f"payload_text: {payload_text}")
         payload_json = json.loads(payload_text[len(WRAPPER_REQUEST_HEAD):])
-        logger.debug(f"payload_json: {payload_json}")
+        logger.debug(f"payload_json: {str(payload_json)[:300]}...")
         if VERSION != payload_json["version"]:
             raise Exception("Invalid payload version.")
         return payload_json

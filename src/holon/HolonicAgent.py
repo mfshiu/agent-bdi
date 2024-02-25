@@ -38,8 +38,10 @@ class HolonicAgent(Agent, BrokerNotifier) :
         i = i or HolonicIntention()
         super().__init__(b, d, i)
         
-        self.agent_id = None
-        self.short_id = None
+        # self.agent_id = None
+        # self.short_id = None
+        self.agent_id = str(uuid.uuid4()).replace("-", "")
+        self.short_id = hashlib.md5(self.agent_id.encode()).hexdigest()[:6]
         self.config = config if config else AbdiConfig(options={})
         self.head_agents = []
         self.body_agents = []
@@ -50,7 +52,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self._agent_thread = None        
         self._broker = None
         self._topic_handlers = {}
-        self._logistics = None
+        # self._logistics = None
 
 
     @final
@@ -92,9 +94,9 @@ class HolonicAgent(Agent, BrokerNotifier) :
 # =====================
         
         
-    def append_logistic(self, logistic:BaseLogistic):
-        self._logistics.append(logistic)
-        return self._logistics
+    # def append_logistic(self, logistic:BaseLogistic):
+    #     self._logistics.append(logistic)
+    #     return self._logistics
 
 
     def is_running(self):
@@ -117,10 +119,11 @@ class HolonicAgent(Agent, BrokerNotifier) :
         if self._agent_proc:
             signal.signal(signal.SIGINT, signal_handler)
 
-        self.agent_id = str(uuid.uuid1()).replace("-", "")
-        self.short_id = hashlib.md5(self.agent_id.encode()).hexdigest()[:6]
+        # self.agent_id = str(uuid.uuid1()).replace("-", "")
+        # self.short_id = hashlib.md5(self.agent_id.encode()).hexdigest()[:6]
+        # logger.debug(f"agent_id: {self.agent_id}, short_id: {self.short_id}")
         self._terminate_lock = threading.Event()
-        self._logistics = []
+        # self._logistics = []
         
         logger.debug(f"create broker")
         if broker_type := self.config.get_broker_type():
@@ -194,18 +197,18 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
     @final
     def publish(self, topic, payload=None):
-        logistic_topic = topic
-        packed_payload = payload
+        # logistic_topic = topic
+        # packed_payload = payload
         
-        for logistic in self._logistics:
-            logistic_topic, packed_payload = logistic.pack(logistic_topic, packed_payload)
+        # for logistic in self._logistics:
+        #     logistic_topic, packed_payload = logistic.pack(logistic_topic, packed_payload)
             
-        logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {packed_payload}")
-        return self._broker.publish(logistic_topic, packed_payload)
+        # logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {packed_payload}")
+        # return self._broker.publish(logistic_topic, packed_payload)
         # logistic = self.get_logistic(topic)
         # packed = logistic.pack(payload)
         # return self._publish(topic, packed)
-        # return self._broker.publish(topic, payload)
+        return self._broker.publish(topic, payload)
 
 
     @final
