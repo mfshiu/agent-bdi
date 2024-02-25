@@ -8,7 +8,6 @@ import time
 from abdi_config import LOGGER_NAME
 from holon.HolonicAgent import HolonicAgent
 from holon.logistics.base_logistic import BaseLogistic
-from holon.logistics.payload_wrapper import PayloadWrapper
 
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -17,18 +16,25 @@ HEADER_ELECTED = "@elected"
 
 
 class LoadingCoordinator(BaseLogistic):
-    def __init__(self, agent:HolonicAgent, work_topic, work_handler, loading_evaluator, datatype="str"):
+    def __init__(self, agent:HolonicAgent, loading_evaluator, datatype="str"):
         self.agent = agent
-        self.work_handler = work_handler
+        self.topic_handler = None
         self.loading_evaluator = loading_evaluator
         self.loading_rate = 0
         self.candidates = None
         self.electing = False
         self.topic_payloads = Queue()
+
         
-        self.agent.subscribe(work_topic, datatype, self.start)
-        self.agent.subscribe(f"{HEADER_RANKING}.{work_topic}", datatype, self.rank)
-        self.agent.subscribe(f"{HEADER_ELECTED}.{work_topic}", datatype, self.elected)
+    def publish(self, topic, payload):
+        self.agent.publish(topic, payload)
+
+
+    def subscribe(self, topic, topic_handler=None, datatype="str"):
+        self.topic_handler = topic_handler
+        self.agent.subscribe(topic, datatype, self.start)
+        self.agent.subscribe(f"{HEADER_RANKING}.{topic}", datatype, self.rank)
+        self.agent.subscribe(f"{HEADER_ELECTED}.{topic}", datatype, self.elected)
         
         
     def reset(self):
@@ -86,8 +92,8 @@ class LoadingCoordinator(BaseLogistic):
         if self.agent.agent_id == min_agent['agent_id']:
             self.agent.publish(f"{HEADER_ELECTED}.{topic}", self.agent.agent_id)
             
-            if self.work_handler:
-                self.work_handler(topic, payload)
+            if self.topic_handler:
+                self.topic_handler(topic, payload)
             else:
                 self.agent.on_message(topic, payload)
             logger.debug(f"Completed topic: {topic}")
