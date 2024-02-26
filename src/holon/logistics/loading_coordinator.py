@@ -38,20 +38,27 @@ class LoadingCoordinator(BaseLogistic):
         
         
     def reset(self):
+        self._set_electing(False)
         self.candidates = []
         self.determine_delay = ThreadSafeCounter()
         
         
+    def _set_electing(self, is_electing):
+        self.electing = is_electing
+        logger.debug(f"{self.agent.short_id}> set electing to {self.electing}")
+        
+        
     def start(self, topic:str, payload):
+        logger.debug(f"{self.agent.short_id}> topic: {topic}, payload: {payload}")
         if self.electing:
-            logger.warning(f"electing")
+            logger.warning(f"{self.agent.short_id}> electing")
             self.topic_payloads.put((topic, payload))
             return
-        self.electing = True            
         self.reset()
+        self._set_electing(True)
         
         self.loading_rate = self.loading_evaluator(topic, payload)
-        self.rank_number = self.loading_rate * 100 + random.randint(1, 1000000)
+        self.rank_number = self.loading_rate * 10000 + random.randint(0, 9999)
 
         rank_payload = {
             "agent_id": self.agent.agent_id,
@@ -65,7 +72,7 @@ class LoadingCoordinator(BaseLogistic):
 
     def rank(self, topic:str, payload):
         if not self.electing:
-            logger.warning(f"NOT electing")
+            logger.warning(f"{self.agent.short_id}> NOT electing")
             return
             
         rank_payload = json.loads(payload.decode())
@@ -77,7 +84,7 @@ class LoadingCoordinator(BaseLogistic):
         
     def determine(self, topic:str, payload):
         if not self.electing:
-            logger.warning(f"NOT electing")
+            logger.warning(f"{self.agent.short_id}> NOT electing")
             return
         
         determine_delay = self.determine_delay.get_value()
@@ -86,28 +93,29 @@ class LoadingCoordinator(BaseLogistic):
             time.sleep(determine_delay)
             determine_delay = self.determine_delay.get_value()
         
-        # logger.debug(f"candidates: {self.candidates}")
-        logger.debug(f"{self.agent.short_id}> candidates size: {len(self.candidates)}")
+        logger.debug(f"{self.agent.short_id}> Candidates: {self.candidates}")
+        # logger.debug(f"{self.agent.short_id}> candidates size: {len(self.candidates)}")
         min_agent = min(self.candidates, key=lambda x: (x['rank_number'], x['agent_id']))
         if self.agent.agent_id == min_agent['agent_id']:
+            logger.info(f"{self.agent.short_id}> Elected for topic: {topic}, payload: {payload}")
             self.agent.publish(f"{HEADER_ELECTED}.{topic}", self.agent.agent_id)
             
             if self.topic_handler:
                 self.topic_handler(topic, payload)
             else:
                 self.agent.on_message(topic, payload)
-            logger.debug(f"Completed topic: {topic}")
         
         
     def elected(self, topic:str, payload):
-        self.electing = False
-        elected_agent_id = payload.decode()
-        logger.debug(f"Elected topic: {topic}")
+        self.reset()
         
+        elected_agent_id = payload.decode()
         if not self.topic_payloads.empty():
             work = self.topic_payloads.get()
             if self.agent.agent_id == elected_agent_id:
-                self.agent.publish(topic=work[0], payload=work[1])
+                next_topic, next_payload = work
+                logger.info(f"{self.agent.short_id}> Next work, topic: {next_topic}, payload: {next_payload}")
+                self.agent.publish(next_topic, next_payload)
             # self.start(topic=work[0], payload=work[1])
 
 

@@ -41,7 +41,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         # self.agent_id = None
         # self.short_id = None
         self.agent_id = str(uuid.uuid4()).replace("-", "")
-        self.short_id = hashlib.md5(self.agent_id.encode()).hexdigest()[:6]
+        self.short_id = self.agent_id[:4] #hashlib.md5(self.agent_id.encode()).hexdigest()[:6]
         self.config = config if config else AbdiConfig(options={})
         self.head_agents = []
         self.body_agents = []
@@ -69,7 +69,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
             try:
                 self._agent_proc.join()
             except:
-                logger.warning(f"{self.name} terminated.")
+                logger.warning(f"{self.short_id}> {self.name} terminated.")
 
 
     @final
@@ -86,7 +86,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
             try:
                 self._agent_thread.join()
             except:
-                logger.warning(f"{self.name} terminated.")
+                logger.warning(f"{self.short_id}> {self.name} terminated.")
 
 
 # =====================
@@ -114,7 +114,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self.on_begining()
 
         def signal_handler(signal, frame):
-            logger.warning(f"{self.name} Ctrl-C: {self.__class__.__name__}")
+            logger.warning(f"{self.short_id}> {self.name} Ctrl-C: {self.__class__.__name__}")
             self.terminate()
         if self._agent_proc:
             signal.signal(signal.SIGINT, signal_handler)
@@ -125,14 +125,14 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self._terminate_lock = threading.Event()
         # self._logistics = []
         
-        logger.debug(f"create broker")
+        logger.debug(f"{self.short_id}> Create broker")
         if broker_type := self.config.get_broker_type():
             self._broker = BrokerMaker().create_broker(
                 broker_type=broker_type, 
                 notifier=self)
             self._broker.start(options=self.config.options)
         
-        logger.debug(f"start interval_loop")
+        logger.debug(f"{self.short_id}> start interval_loop")
         def interval_loop():
             while not self._terminate_lock.is_set():
                 self.on_interval()
@@ -225,7 +225,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
     
     def _on_response(self, topic, payload):
         managed_payload = self._request_logistic.unpack(payload)
-        logger.debug(f"receiver: {managed_payload['receiver']}, agent_id: {self.agent_id}")
+        logger.debug(f"{self.short_id}> receiver: {managed_payload['receiver']}, agent_id: {self.agent_id}")
         if managed_payload["receiver"] == self.agent_id:
             self._on_message(topic, managed_payload["content"])
 
@@ -235,14 +235,14 @@ class HolonicAgent(Agent, BrokerNotifier) :
         
     
     def _on_request(self, topic, payload):
-        logger.debug(f"topic: {topic}, payload: {payload}")
+        logger.debug(f"{self.short_id}> topic: {topic}, payload: {payload}")
         request_payload = self._request_logistic.unpack(payload)
 
         handler = self._topic_handlers[topic] if topic in self._topic_handlers else self.on_request
         response_topic, response_payload = handler(topic, request_payload["content"])
-        logger.debug(f"response_topic: {response_topic}")
+        logger.debug(f"{self.short_id}> response_topic: {response_topic}")
         if not response_payload:
-            logger.warning(f"response_payload is None or empty.")
+            logger.warning(f"{self.short_id}> response_payload is None or empty.")
         
         if response_topic:
             response_payload = self._request_logistic.pack_for_response(response_payload, request_payload)
@@ -258,13 +258,13 @@ class HolonicAgent(Agent, BrokerNotifier) :
     
     
     def set_topic_handler(self, topic, handler):
-        logger.debug(f"Set topic handler: {topic}")
+        logger.debug(f"{self.short_id}> Set topic handler: {topic}")
         self._topic_handlers[topic] = handler
         
 
     @final
     def terminate(self):
-        logger.warn(f"{self.name}.")
+        logger.warn(f"{self.short_id}> {self.name}.")
 
         for a in self.head_agents:
             name = a.__class__.__name__
@@ -284,7 +284,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
     
     def _on_connect(self):
-        logger.info(f"{self.name} Broker is connected.")
+        logger.info(f"{self.short_id}> {self.name} Broker is connected.")
         
         self.subscribe("echo")
         self.subscribe("terminate")
@@ -346,7 +346,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
         try:
             data = payload.decode('utf-8', 'ignore')
         except Exception as ex:
-            logger.error(f"Type: {type(ex)}")
+            logger.error(f"{self.short_id}> Type: {type(ex)}")
             logger.exception(ex)
             data = ""
             
