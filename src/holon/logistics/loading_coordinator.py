@@ -35,8 +35,8 @@ class LoadingCoordinator(BaseLogistic):
         self.agent.subscribe(topic, datatype, self.start)
         self.agent.subscribe(f"{HEADER_RANKING}.{topic}", datatype, self.rank)
         self.agent.subscribe(f"{HEADER_ELECTED}.{topic}", datatype, self.elected)
-        
-        
+
+
     def reset(self):
         self._set_electing(False)
         self.candidates = []
