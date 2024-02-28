@@ -35,8 +35,8 @@ class LoadingCoordinator(BaseLogistic):
         self.agent.subscribe(topic, datatype, self.start)
         self.agent.subscribe(f"{HEADER_RANKING}.{topic}", datatype, self.rank)
         self.agent.subscribe(f"{HEADER_ELECTED}.{topic}", datatype, self.elected)
-
-
+        
+        
     def reset(self):
         self._set_electing(False)
         self.candidates = []
@@ -95,15 +95,16 @@ class LoadingCoordinator(BaseLogistic):
         
         logger.debug(f"{self.agent.short_id}> Candidates: {self.candidates}")
         # logger.debug(f"{self.agent.short_id}> candidates size: {len(self.candidates)}")
-        min_agent = min(self.candidates, key=lambda x: (x['rank_number'], x['agent_id']))
-        if self.agent.agent_id == min_agent['agent_id']:
-            logger.info(f"{self.agent.short_id}> Elected for topic: {topic}, payload: {payload}")
-            self.agent.publish(f"{HEADER_ELECTED}.{topic}", self.agent.agent_id)
-            
-            if self.topic_handler:
-                self.topic_handler(topic, payload)
-            else:
-                self.agent.on_message(topic, payload)
+        if len(self.candidates):
+            min_agent = min(self.candidates, key=lambda x: (x['rank_number'], x['agent_id']))
+            if self.agent.agent_id == min_agent['agent_id']:
+                logger.info(f"{self.agent.short_id}> Elected for topic: {topic}, payload: {payload}")
+                self.agent.publish(f"{HEADER_ELECTED}.{topic}", self.agent.agent_id)
+                
+                if self.topic_handler:
+                    self.topic_handler(topic, payload)
+                else:
+                    self.agent.on_message(topic, payload)
         
         
     def elected(self, topic:str, payload):
