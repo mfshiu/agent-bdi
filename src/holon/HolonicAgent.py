@@ -216,11 +216,11 @@ class HolonicAgent(Agent, BrokerNotifier) :
         return self._broker.publish(topic, payload)
         
         
-    @final
-    def request(self, topic, payload):
-        # wrapped = self._request_logistic.pack(payload)
-        # self.publish(topic, wrapped)
-        self.publish(f"@request.{topic}", payload)
+    # @final
+    # def request(self, topic, payload):
+    #     # wrapped = self._request_logistic.pack(payload)
+    #     # self.publish(topic, wrapped)
+    #     self.publish(f"@request.{topic}", payload)
         
     
     def _on_response(self, topic, payload):
