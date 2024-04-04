@@ -1,4 +1,5 @@
 import inspect
+import logging
 from multiprocessing import Process
 import os
 import signal
@@ -12,9 +13,6 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
-import hashlib
-import logging
-
 from abdi_config import AbdiConfig, LOGGER_NAME
 from broker.notifier import BrokerNotifier
 from broker.broker_maker import BrokerMaker
@@ -23,12 +21,9 @@ from holon.Blackboard import Blackboard
 from holon.HolonicDesire import HolonicDesire
 from holon.HolonicIntention import HolonicIntention
 from holon.logistics.base_logistic import BaseLogistic
-# from holon.logistics.broker_logistic import BrokerLogistic
-from holon.payload import Payload
 
 
 logger = logging.getLogger(LOGGER_NAME)
-
 
 
 class HolonicAgent(Agent, BrokerNotifier) :
@@ -296,14 +291,18 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
 
     @final
-    def _on_message(self, topic:str, payload):
-        # logger.debug(f"topic: {topic}, payload: {payload}")
+    def _on_message(self, topic:str, payload, payload_info=None):
         if topic in self._topic_handlers:
-            # logger.debug(f"topic in self._topic_handlers")
-            self._topic_handlers[topic](topic, payload)
+            topic_handler = self._topic_handlers[topic]
+            if len(inspect.signature(topic_handler).parameters) == 2:
+                self._topic_handlers[topic](topic, payload)
+            else:
+                self._topic_handlers[topic](topic, payload, payload_info)
         else:
-            # logger.debug(f"on_message")
-            self.on_message(topic, payload)
+            if len(inspect.signature(self.on_message).parameters) == 2:
+                self.on_message(topic, payload)
+            else:
+                self.on_message(topic, payload, payload_info)
         
         
     # def _process_message(self, topic:str, payload):
@@ -323,7 +322,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
     #             self.on_message(topic, payload)
 
 
-    def on_message(self, topic:str, payload):
+    def on_message(self, topic:str, payload, payload_info=None):
         pass
 
 

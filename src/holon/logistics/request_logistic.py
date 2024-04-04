@@ -1,5 +1,4 @@
 import logging
-import uuid
 
 from abdi_config import LOGGER_NAME
 from holon.HolonicAgent import HolonicAgent
@@ -27,10 +26,12 @@ class RequestLogistic(BaseLogistic):
     def publish(self, topic, payload):
         logistic_topic = f"{PUBLISH_HEADER}.{topic}"
         logger.debug(f"agent_id: {self.agent.agent_id}, request_id: {self.request_id}")
-        packed_payload = self._payload_wrapper.wrap_for_request(payload, self.request_id)
+        packed_payload, request_token = self._payload_wrapper.wrap_for_request(payload, self.request_id)
         # logistic_topic, packed_payload = self.pack(topic, payload)
         logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}")
         self.agent.publish(logistic_topic, packed_payload)
+        
+        return request_token
 
 
     def subscribe(self, topic, topic_handler=None, datatype="str"):
@@ -46,7 +47,7 @@ class RequestLogistic(BaseLogistic):
 
         if topic_handler := RequestLogistic.__handlers[self.response_topic_header]:
             self.agent.set_topic_handler(responsed_topic, topic_handler)
-        self.agent._on_message(responsed_topic, unpacked["content"])
+        self.agent._on_message(responsed_topic, unpacked["content"], payload_info=unpacked["request_token"])
 
 
     # def handle_response(self, topic:str, payload):

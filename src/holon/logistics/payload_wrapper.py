@@ -1,6 +1,7 @@
 import json
 import logging
 import pickle
+import uuid
 
 from abdi_config import LOGGER_NAME
 
@@ -26,7 +27,8 @@ class PayloadWrapper:
         response_json = {
             "version": VERSION,
             "request_id": request_payload["request_id"],
-            "receiver": request_payload["sender"]
+            "receiver": request_payload["sender"],
+            "request_token": request_payload["request_token"]
         }
         response_json["content"] = response_payload
         
@@ -37,7 +39,8 @@ class PayloadWrapper:
         request_json = {
             "version": VERSION,
             "request_id": request_id,
-            "sender": self.agent_id
+            "sender": self.agent_id,
+            "request_token": str(uuid.uuid4()).replace("-", "")
         }
         request_json["content"] = payload
         
@@ -99,11 +102,11 @@ class PayloadWrapper:
     def wrap_for_request(self, payload, request_id) -> str:
         wrapper = self.get_payload_wrapper(payload)
         if wrapper:
-            payload_resp = wrapper.wrap_for_request(payload, request_id)
+            payload_request, request_token = wrapper.wrap_for_request(payload, request_id)
         else:
             raise Exception("Unsupported payload type.")
 
-        return payload_resp
+        return payload_request, request_token
 
 
 
@@ -130,7 +133,7 @@ class BinaryWrapper:
         request_json = self.payload_wrapper.create_request_json(payload, request_id)
         request_payload = WRAPPER_REQUEST_HEAD_BYTES + pickle.dumps(request_json)
         
-        return request_payload
+        return request_payload, request_json['request_token']
      
         
     def wrap_for_response(self, response_payload:bytes, managed_request_payload) -> bytes:
@@ -161,7 +164,6 @@ class TextWrapper:
         
     def unpack(self, payload:str):
         payload_text = payload.decode('utf-8')
-        # logger.debug(f"payload_text: {payload_text}")
         payload_json = json.loads(payload_text[len(WRAPPER_REQUEST_HEAD):])
         logger.debug(f"payload_json: {str(payload_json)[:300]}...")
         if VERSION != payload_json["version"]:
@@ -171,10 +173,9 @@ class TextWrapper:
 
     def wrap_for_request(self, payload, request_id) -> str:
         request_json = self.payload_wrapper.create_request_json(payload, request_id)
-        # print(f"request_json: {request_json}")
         request_payload = f"{WRAPPER_REQUEST_HEAD}{json.dumps(request_json)}"
         
-        return request_payload
+        return request_payload, request_json['request_token']
                 
         
     def wrap_for_response(self, response_payload:str, managed_request_payload) -> str:
