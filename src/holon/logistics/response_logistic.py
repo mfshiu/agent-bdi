@@ -23,8 +23,9 @@ class ResponseLogistic(BaseLogistic):
         request_id = self.request_payload['request_id']
         logistic_topic = f"{PUBLISH_HEADER}.{sender_id}.{request_id}.{topic}"
         packed_payload = self._payload_wrapper.wrap_for_response(payload, self.request_payload)
-        # logistic_topic, packed_payload = self.pack(topic, payload)
         logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}")
+        # logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)}")
+        # self.agent.publish(logistic_topic, str(packed_payload))
         self.agent.publish(logistic_topic, packed_payload)
 
 

@@ -192,17 +192,7 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
     @final
     def publish(self, topic, payload=None):
-        # logistic_topic = topic
-        # packed_payload = payload
-        
-        # for logistic in self._logistics:
-        #     logistic_topic, packed_payload = logistic.pack(logistic_topic, packed_payload)
-            
-        # logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {packed_payload}")
-        # return self._broker.publish(logistic_topic, packed_payload)
-        # logistic = self.get_logistic(topic)
-        # packed = logistic.pack(payload)
-        # return self._publish(topic, packed)
+        # logger.debug(f"topic: {topic}, payload: {payload}")
         return self._broker.publish(topic, payload)
 
 

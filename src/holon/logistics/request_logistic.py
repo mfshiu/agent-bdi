@@ -36,6 +36,7 @@ class RequestLogistic(BaseLogistic):
 
     def subscribe(self, topic, topic_handler=None, datatype="str"):
         response_topic = f"{self.response_topic_header}.{topic}"
+        logger.debug(f"response_topic: {response_topic}")
         self.agent.subscribe(response_topic, datatype, self.handle_response)
         RequestLogistic.__handlers[self.response_topic_header] = topic_handler
 
