@@ -48,7 +48,9 @@ class RequestLogistic(BaseLogistic):
 
         if topic_handler := RequestLogistic.__handlers[self.response_topic_header]:
             self.agent.set_topic_handler(responsed_topic, topic_handler)
-        self.agent._on_message(responsed_topic, unpacked["content"], payload_info=unpacked["request_token"])
+        self.agent._on_message(topic=responsed_topic, 
+                               payload=unpacked["content"], 
+                               payload_info=unpacked["request_token"])
 
 
     # def handle_response(self, topic:str, payload):
