@@ -3,12 +3,12 @@ from typing import Any
 
 
 class BaseLogistic(ABC):
-    @abstractmethod
-    def publish(self, topic, payload):
-        """
-        Abstract method that packages the payload.
-        """
-        pass
+    # @abstractmethod
+    # def publish(self, topic, payload):
+    #     """
+    #     Abstract method that packages the payload.
+    #     """
+    #     pass
 
 
     def subscribe(self, topic):

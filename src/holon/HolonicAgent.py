@@ -285,31 +285,14 @@ class HolonicAgent(Agent, BrokerNotifier) :
         if topic in self._topic_handlers:
             topic_handler = self._topic_handlers[topic]
             if len(inspect.signature(topic_handler).parameters) == 2:
-                self._topic_handlers[topic](topic, payload)
+                return self._topic_handlers[topic](topic, payload)
             else:
-                self._topic_handlers[topic](topic, payload, payload_info)
+                return self._topic_handlers[topic](topic, payload, payload_info)
         else:
             if len(inspect.signature(self.on_message).parameters) == 2:
-                self.on_message(topic, payload)
+                return self.on_message(topic, payload)
             else:
-                self.on_message(topic, payload, payload_info)
-        
-        
-    # def _process_message(self, topic:str, payload):
-    #     logger.debug(f"payload: {len(payload)}")
-    #     if payload and self._request_logistic.is_request(payload):
-    #         logger.debug("message is_request")
-    #         threading.Thread(target=self._on_request, args=(topic, payload)).start()
-    #         # self._on_request(topic, payload)
-    #     elif payload and self._request_logistic.is_response(payload):
-    #         logger.debug(f"message is_response")
-    #         self._on_response(topic, payload)
-    #     else:
-    #         logger.debug(f"unmanaged payload")
-    #         if topic in self._topic_handlers:
-    #             self._topic_handlers[topic](topic, payload)
-    #         else:
-    #             self.on_message(topic, payload)
+                return self.on_message(topic, payload, payload_info)
 
 
     def on_message(self, topic:str, payload, payload_info=None):
