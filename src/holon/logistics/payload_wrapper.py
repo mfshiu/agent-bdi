@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import pickle
@@ -24,18 +25,23 @@ class PayloadWrapper:
         
         
     def create_response_json(self, response_payload, request_payload):
-        response_json = {
-            "version": VERSION,
-            "request_id": request_payload["request_id"],
-            "receiver": request_payload["sender"],
-            "request_token": request_payload["request_token"]
-        }
+        response_json = copy.deepcopy(request_payload)
+        # response_json = {
+        #     "version": VERSION,
+        #     "request_id": request_payload["request_id"],
+        #     "receiver": request_payload["sender"],
+        #     "request_token": request_payload["request_token"]
+        # }
+        response_json["version"] = VERSION
         response_json["content"] = response_payload
+
+        # if 'source_payload' in request_payload:
+        #     response_json["source_payload"] = request_payload["source_payload"]
         
         return response_json
         
         
-    def create_request_json(self, payload, request_id):
+    def create_request_json(self, payload, request_id, source_payload):
         request_json = {
             "version": VERSION,
             "request_id": request_id,
@@ -43,6 +49,9 @@ class PayloadWrapper:
             "request_token": str(uuid.uuid4()).replace("-", "")
         }
         request_json["content"] = payload
+
+        if source_payload:
+            request_json["source_payload"] = source_payload
         
         return request_json
         
@@ -99,10 +108,9 @@ class PayloadWrapper:
         return payload_resp
 
 
-    def wrap_for_request(self, payload, request_id) -> str:
-        wrapper = self.get_payload_wrapper(payload)
-        if wrapper:
-            payload_request, request_token = wrapper.wrap_for_request(payload, request_id)
+    def wrap_for_request(self, payload, request_id, source_payload) -> str:
+        if wrapper := self.get_payload_wrapper(payload):
+            payload_request, request_token = wrapper.wrap_for_request(payload, request_id, source_payload)
         else:
             raise Exception("Unsupported payload type.")
 
@@ -129,8 +137,8 @@ class BinaryWrapper:
         return payload_json
 
 
-    def wrap_for_request(self, payload, request_id) -> bytes:
-        request_json = self.payload_wrapper.create_request_json(payload, request_id)
+    def wrap_for_request(self, payload, request_id, source_payload) -> bytes:
+        request_json = self.payload_wrapper.create_request_json(payload, request_id, source_payload)
         request_payload = WRAPPER_REQUEST_HEAD_BYTES + pickle.dumps(request_json)
         
         return request_payload, request_json['request_token']
@@ -171,8 +179,8 @@ class TextWrapper:
         return payload_json
 
 
-    def wrap_for_request(self, payload, request_id) -> str:
-        request_json = self.payload_wrapper.create_request_json(payload, request_id)
+    def wrap_for_request(self, payload, request_id, source_payload) -> str:
+        request_json = self.payload_wrapper.create_request_json(payload, request_id, source_payload)
         request_payload = f"{WRAPPER_REQUEST_HEAD}{json.dumps(request_json)}"
         
         return request_payload, request_json['request_token']

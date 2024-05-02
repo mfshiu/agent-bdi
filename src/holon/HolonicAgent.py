@@ -281,18 +281,18 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
 
     @final
-    def _on_message(self, topic:str, payload, payload_info=None):
+    def _on_message(self, topic:str, payload, source_payload=None):
         if topic in self._topic_handlers:
             topic_handler = self._topic_handlers[topic]
             if len(inspect.signature(topic_handler).parameters) == 2:
                 return self._topic_handlers[topic](topic, payload)
             else:
-                return self._topic_handlers[topic](topic, payload, payload_info)
+                return self._topic_handlers[topic](topic, payload, source_payload)
         else:
             if len(inspect.signature(self.on_message).parameters) == 2:
                 return self.on_message(topic, payload)
             else:
-                return self.on_message(topic, payload, payload_info)
+                return self.on_message(topic, payload, source_payload)
 
 
     def on_message(self, topic:str, payload, payload_info=None):
