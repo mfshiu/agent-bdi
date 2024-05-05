@@ -24,13 +24,11 @@ class RequestLogistic(BaseLogistic):
         
         
     def publish(self, topic, payload, source_payload=None):
-        logger.debug(f"topic: {topic}, source_payload: {source_payload}")
+        logger.debug(f"topic: {topic}, source_payload: {str(source_payload)[:300]}")
         logistic_topic = f"{PUBLISH_HEADER}.{topic}"
         logger.debug(f"agent_id: {self.agent.agent_id}, request_id: {self.request_id}")
         packed_payload, request_token = self._payload_wrapper.wrap_for_request(payload, self.request_id, source_payload)
-        # logistic_topic, packed_payload = self.pack(topic, payload)
-        logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)}")
-        # logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}")
+        logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}..")
         self.agent.publish(logistic_topic, packed_payload)
 
         return request_token
@@ -46,24 +44,10 @@ class RequestLogistic(BaseLogistic):
     def handle_response(self, topic:str, payload):
         responsed_topic = topic[len(self.response_topic_header)+1:]
         unpacked = self._payload_wrapper.unpack(payload)
-        logger.debug(f"topic: {topic}, unpacked: {str(unpacked)}")
+        logger.debug(f"topic: {topic}, unpacked: {str(unpacked)[:300]}")
 
         if topic_handler := RequestLogistic.__handlers[self.response_topic_header]:
             self.agent.set_topic_handler(responsed_topic, topic_handler)
         self.agent._on_message(topic=responsed_topic, 
                                payload=unpacked["content"], 
                                source_payload=unpacked)
-
-
-    # def handle_response(self, topic:str, payload):
-    #     responsed_topic = topic[len(self.response_topic_header)+1:]
-    #     # unpacked = self.unpack(payload)
-    #     unpacked = self._payload_wrapper.unpack(payload)
-    #     if unpacked["receiver"] == self.agent.agent_id:
-    #         if unpacked["request_id"] == self.request_id:
-    #             logger.debug(f"MATCHED, agent_id: {self.agent.agent_id}, request_id: {self.request_id}")
-    #             self.agent._on_message(responsed_topic, unpacked["content"])
-    #         else:
-    #             logger.debug(f"NOT matched, request_id: {unpacked['request_id']}, self.request_id: {self.request_id}")
-    #     else:
-    #         logger.debug(f"NOT matched, receiver: {unpacked['receiver']}, agent_id: {self.agent.agent_id}")
