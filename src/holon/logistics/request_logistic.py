@@ -24,7 +24,7 @@ class RequestLogistic(BaseLogistic):
         
         
     def publish(self, topic, payload, source_payload=None):
-        logger.debug(f"topic: {topic}, source_payload: {str(source_payload)[:300]}")
+        logger.debug(f"topic: {topic}, source_payload: {str(source_payload)[:300]}..")
         logistic_topic = f"{PUBLISH_HEADER}.{topic}"
         logger.debug(f"agent_id: {self.agent.agent_id}, request_id: {self.request_id}")
         packed_payload, request_token = self._payload_wrapper.wrap_for_request(payload, self.request_id, source_payload)
@@ -44,7 +44,7 @@ class RequestLogistic(BaseLogistic):
     def handle_response(self, topic:str, payload):
         responsed_topic = topic[len(self.response_topic_header)+1:]
         unpacked = self._payload_wrapper.unpack(payload)
-        logger.debug(f"topic: {topic}, unpacked: {str(unpacked)[:300]}")
+        logger.debug(f"topic: {topic}, unpacked: {str(unpacked)[:300]}..")
 
         if topic_handler := RequestLogistic.__handlers[self.response_topic_header]:
             self.agent.set_topic_handler(responsed_topic, topic_handler)

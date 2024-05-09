@@ -25,9 +25,14 @@ class ResponseLogistic(BaseLogistic):
 
         if topic_handler:
             self.agent.set_topic_handler(topic, topic_handler)
+            
+            
+    def get_original_topic(self, source_payload):
+        topic = ResponseLogistic._deep_find_deepest('request_topic', source_payload)
+        return topic[0] if topic else None
 
     
-    def deep_find_deepest(key, dictionary, depth=0):
+    def _deep_find_deepest(key, dictionary, depth=0):
         deepest_value = None
         max_depth = -1
 
@@ -37,7 +42,7 @@ class ResponseLogistic(BaseLogistic):
 
         for subkey, subvalue in dictionary.items():
             if isinstance(subvalue, dict):  # Only search in sub-dictionaries
-                found_value, found_depth = ResponseLogistic.deep_find_deepest(key, subvalue, depth + 1)
+                found_value, found_depth = ResponseLogistic._deep_find_deepest(key, subvalue, depth + 1)
                 if found_depth > max_depth:
                     deepest_value = found_value
                     max_depth = found_depth
@@ -46,8 +51,8 @@ class ResponseLogistic(BaseLogistic):
 
 
     def response_publish(self, topic, result, source_payload):
-        sender_id = ResponseLogistic.deep_find_deepest('sender', source_payload)[0]
-        request_id = ResponseLogistic.deep_find_deepest('request_id', source_payload)[0]
+        sender_id = ResponseLogistic._deep_find_deepest('sender', source_payload)[0]
+        request_id = ResponseLogistic._deep_find_deepest('request_id', source_payload)[0]
         logistic_topic = f"{PUBLISH_HEADER}.{sender_id}.{request_id}.{topic}"
         packed_payload = self._payload_wrapper.wrap_for_response(result, source_payload)
         logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}..")
@@ -67,11 +72,12 @@ class ResponseLogistic(BaseLogistic):
         logger.debug(f"topic: {topic}, payload: {str(payload)[:300]}..")
         request_topic = topic[len(SUBSCRIBE_HEADER)+1:]
         request_payload = self._payload_wrapper.unpack(payload)
-        logger.debug(f"request_payload: {str(request_payload)[:300]}")
+        request_payload['request_topic'] = request_topic
+        logger.debug(f"request_payload: {str(request_payload)[:300]}..")
         
         def on_message(request_topic, request_payload):
             output = self.agent._on_message(request_topic, request_payload["content"], request_payload)
-            logger.debug(f"output: {str(output)[:300]}")
+            logger.debug(f"output: {str(output)[:300]}..")
             if output and isinstance(output, tuple) and len(output) == 2:
                 resp_topic, resp_result = output
                 self.response(resp_topic, resp_result, request_payload)
