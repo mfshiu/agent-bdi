@@ -100,7 +100,7 @@ class LoadingCoordinator(BaseLogistic):
             if self.agent.agent_id == min_agent['agent_id']:
                 logger.info(f"{self.agent.short_id}> Elected for topic: {topic}, payload: {payload}")
                 self.agent.publish(f"{HEADER_ELECTED}.{topic}", self.agent.agent_id)
-                
+
                 if self.topic_handler:
                     self.topic_handler(topic, payload)
                 else:
