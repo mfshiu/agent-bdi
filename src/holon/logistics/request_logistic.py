@@ -15,15 +15,28 @@ class RequestLogistic(BaseLogistic):
     __handlers = {}
     
     
-    def __init__(self, agent:HolonicAgent, request_id=""):
+    def __init__(self, agent:HolonicAgent, request_id="", job_topic=None):
         self.agent = agent
+        self.job_topic = job_topic
         self.request_id = request_id
         self.response_topic_header = f"{SUBSCRIBE_HEADER}.{self.agent.agent_id}.{self.request_id}"
         logger.debug(f"self, agent_id: {self.agent.agent_id}, short_id: {self.agent.short_id}, request_id: {self.request_id}")
         self._payload_wrapper = PayloadWrapper(self.agent.agent_id)
         
         
+    # def publish(self, payload, source_payload=None):
+    #     if not self.job_topic:
+    #         raise Exception("The job topic has not been set yet.")
+    #     self.publish(self.job_topic, payload, source_payload)
+        
+        
     def publish(self, topic, payload, source_payload=None):
+        if not topic:
+            if self.job_topic:
+                topic = self.job_topic
+            else:
+                raise Exception("The job topic has not been set yet.")
+
         logger.debug(f"topic: {topic}, source_payload: {str(source_payload)[:300]}..")
         logistic_topic = f"{PUBLISH_HEADER}.{topic}"
         logger.debug(f"agent_id: {self.agent.agent_id}, request_id: {self.request_id}")
@@ -34,7 +47,18 @@ class RequestLogistic(BaseLogistic):
         return request_token
 
 
-    def subscribe(self, topic, topic_handler=None, datatype="str"):
+    # def subscribeA(self, topic_handler=None, datatype="str"):
+    #     if not self.job_topic:
+    #         raise Exception("The job topic has not been set yet.")
+    #     self.subscribe(self.job_topic, topic_handler, datatype)
+        
+        
+    def subscribe(self, topic=None, topic_handler=None, datatype="str"):
+        if not topic:
+            if self.job_topic:
+                topic = self.job_topic
+            else:
+                raise Exception("The job topic has not been set yet.")
         response_topic = f"{self.response_topic_header}.{topic}"
         logger.debug(f"response_topic: {response_topic}")
         self.agent.subscribe(response_topic, datatype, self.handle_response)

@@ -13,12 +13,25 @@ SUBSCRIBE_HEADER = "@request"
 
 
 class ResponseLogistic(BaseLogistic):
-    def __init__(self, agent:HolonicAgent):
+    def __init__(self, agent:HolonicAgent, job_topic=None):
         self.agent = agent
+        self.job_topic = job_topic
         self._payload_wrapper = PayloadWrapper(self.agent.agent_id)
 
 
+    # def subscribe(self, topic_handler=None, datatype="str"):
+    #     if not self.job_topic:
+    #         raise Exception("The job topic has not been set yet.")
+    #     self.subscribe(self.job_topic, topic_handler, datatype)
+        
+        
     def subscribe(self, topic, topic_handler=None, datatype="str"):
+        if not topic:
+            if self.job_topic:
+                topic = self.job_topic
+            else:
+                raise Exception("The job topic has not been set yet.")
+
         request_topic = f"{SUBSCRIBE_HEADER}.{topic}"
         logger.debug(f"request_topic: {request_topic}")
         self.agent.subscribe(request_topic, datatype, self.handle_request)
@@ -50,18 +63,33 @@ class ResponseLogistic(BaseLogistic):
         return deepest_value, max_depth
 
 
-    def response_publish(self, topic, result, source_payload):
+    def publish(self, topic=None, result=None, source_payload=None):
+        if not topic:
+            if self.job_topic:
+                topic = self.job_topic
+            else:
+                raise Exception("The job topic has not been set yet.")
+
         sender_id = ResponseLogistic._deep_find_deepest('sender', source_payload)[0]
         request_id = ResponseLogistic._deep_find_deepest('request_id', source_payload)[0]
-        logistic_topic = f"{PUBLISH_HEADER}.{sender_id}.{request_id}.{topic}"
-        packed_payload = self._payload_wrapper.wrap_for_response(result, source_payload)
-        logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}..")
-        self.agent.publish(logistic_topic, packed_payload)
+        self.__response(topic, result, sender_id, request_id, source_payload)
+        # logistic_topic = f"{PUBLISH_HEADER}.{sender_id}.{request_id}.{topic}"
+        # packed_payload = self._payload_wrapper.wrap_for_response(result, source_payload)
+        # logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}..")
+        # self.agent.publish(logistic_topic, packed_payload)
 
 
-    def response(self, topic, result, source_payload):
+    def _response(self, topic, result, source_payload):
         sender_id = source_payload['sender']
         request_id = source_payload['request_id']
+        self.__response(topic, result, sender_id, request_id, source_payload)
+        # logistic_topic = f"{PUBLISH_HEADER}.{sender_id}.{request_id}.{topic}"
+        # packed_payload = self._payload_wrapper.wrap_for_response(result, source_payload)
+        # logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}..")
+        # self.agent.publish(logistic_topic, packed_payload)
+
+
+    def __response(self, topic, result, sender_id, request_id, source_payload):
         logistic_topic = f"{PUBLISH_HEADER}.{sender_id}.{request_id}.{topic}"
         packed_payload = self._payload_wrapper.wrap_for_response(result, source_payload)
         logger.debug(f"logistic_topic: {logistic_topic}, packed_payload: {str(packed_payload)[:300]}..")
@@ -80,7 +108,7 @@ class ResponseLogistic(BaseLogistic):
             logger.debug(f"output: {str(output)[:300]}..")
             if output and isinstance(output, tuple) and len(output) == 2:
                 resp_topic, resp_result = output
-                self.response(resp_topic, resp_result, request_payload)
+                self._response(resp_topic, resp_result, request_payload)
 
         threading.Thread(target=on_message, 
                          args=(request_topic, request_payload)).start()
