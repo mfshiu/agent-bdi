@@ -26,7 +26,7 @@ from holon.logistics.base_logistic import BaseLogistic
 logger = logging.getLogger(LOGGER_NAME)
 
 
-class HolonicAgent(Agent, BrokerNotifier) :
+class HolonicAgent(Agent, BrokerNotifier):
     def __init__(self, config:AbdiConfig=None, b:Blackboard=None, d:HolonicDesire=None, i: HolonicIntention=None):
         b = b or Blackboard()
         d = d or HolonicDesire()
@@ -48,6 +48,28 @@ class HolonicAgent(Agent, BrokerNotifier) :
         self._broker = None
         self._topic_handlers = {}
         # self._logistics = None
+
+
+    @final
+    def get_data(self, key:str):
+        return self.__repository.get(key)
+
+
+    @final
+    def pop_data(self, key:str):
+        data = None
+        self.__repository_lock.acquire()
+        if key in self.__repository:
+            data = self.__repository.pop(key)
+        self.__repository_lock.release()
+        return data
+
+
+    @final
+    def put_data(self, key:str, data):
+        self.__repository_lock.acquire()
+        self.__repository[key] = data
+        self.__repository_lock.release()        
 
 
     @final
@@ -107,6 +129,9 @@ class HolonicAgent(Agent, BrokerNotifier) :
 
     def _run_begin(self):
         self.on_begining()
+
+        self.__repository = {}
+        self.__repository_lock = threading.Lock()
 
         def signal_handler(signal, frame):
             logger.warning(f"{self.short_id}> {self.name} Ctrl-C: {self.__class__.__name__}")
