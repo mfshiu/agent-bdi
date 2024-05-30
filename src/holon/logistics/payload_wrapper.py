@@ -25,6 +25,8 @@ class PayloadWrapper:
         
         
     def create_response_json(self, response_payload, request_payload):
+        if request_payload is None:
+            request_payload = {}
         response_json = copy.deepcopy(request_payload)
         # response_json = {
         #     "version": VERSION,

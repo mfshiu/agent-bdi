@@ -49,16 +49,17 @@ class ResponseLogistic(BaseLogistic):
         deepest_value = None
         max_depth = -1
 
-        if key in dictionary:
-            deepest_value = dictionary[key]
-            max_depth = depth
+        if dictionary:
+            if key in dictionary:
+                deepest_value = dictionary[key]
+                max_depth = depth
 
-        for subkey, subvalue in dictionary.items():
-            if isinstance(subvalue, dict):  # Only search in sub-dictionaries
-                found_value, found_depth = ResponseLogistic._deep_find_deepest(key, subvalue, depth + 1)
-                if found_depth > max_depth:
-                    deepest_value = found_value
-                    max_depth = found_depth
+            for subkey, subvalue in dictionary.items():
+                if isinstance(subvalue, dict):  # Only search in sub-dictionaries
+                    found_value, found_depth = ResponseLogistic._deep_find_deepest(key, subvalue, depth + 1)
+                    if found_depth > max_depth:
+                        deepest_value = found_value
+                        max_depth = found_depth
 
         return deepest_value, max_depth
 
