@@ -1,4 +1,5 @@
 import inspect
+import json
 import logging
 from multiprocessing import Process
 import os
@@ -47,7 +48,16 @@ class HolonicAgent(Agent, BrokerNotifier):
         self._agent_thread = None        
         self._broker = None
         self._topic_handlers = {}
-        # self._logistics = None
+        self._echo_handlers = {}
+        self.subscribed_topics = set()
+        self.logistics = {}
+        
+        
+    @final
+    def register_logistic(self, logistic:BaseLogistic):
+        if not logistic.job_topic:
+            raise Exception("Logistic must define the job topic.")
+        self.logistics[logistic.job_topic] = logistic
 
 
     @final
@@ -208,16 +218,18 @@ class HolonicAgent(Agent, BrokerNotifier):
         pass
     
     
-    def get_logistic(self, topic:str):
-        if topic.startswith("@request."):
-            return RequestLogistic(self)
-        else:
-            return BrokerLogistic(self)
+    # def get_logistic(self, topic:str):
+    #     if topic.startswith("@request."):
+    #         return RequestLogistic(self)
+    #     else:
+    #         return BrokerLogistic(self)
 
 
     @final
     def publish(self, topic, payload=None):
         # logger.debug(f"topic: {topic}, payload: {payload}")
+        if topic in self.logistics:
+            self.logistics[topic].publish(topic, payload)
         return self._broker.publish(topic, payload)
 
 
@@ -262,9 +274,15 @@ class HolonicAgent(Agent, BrokerNotifier):
 
     @final
     def subscribe(self, topic, data_type="str", topic_handler=None):
-        if topic_handler:
-            self.set_topic_handler(topic, topic_handler)
-        return self._broker.subscribe(topic, data_type)
+        logger.debug(f"topic: {topic}, topic_handler: {topic_handler}")
+        self.subscribed_topics.add(topic)
+        
+        if topic in self.logistics:
+            return self.logistics[topic].subscribe(topic, topic_handler, data_type)
+        else:
+            if topic_handler:
+                self.set_topic_handler(topic, topic_handler)
+            return self._broker.subscribe(topic, data_type)
     
     
     def set_topic_handler(self, topic, handler):
@@ -278,11 +296,11 @@ class HolonicAgent(Agent, BrokerNotifier):
 
         for a in self.head_agents:
             name = a.__class__.__name__
-            self.publish(topic='terminate', payload=name)
+            # self.publish(topic='terminate', payload=name)
 
         for a in self.body_agents:
             name = a.__class__.__name__
-            self.publish(topic='terminate', payload=name)
+            # self.publish(topic='terminate', payload=name)
 
         self._terminate_lock.set()
 
@@ -292,12 +310,41 @@ class HolonicAgent(Agent, BrokerNotifier):
 #  Implementation of BrokerNotifier 
 # ==================================
 
+
+    # For overriding
+    # def on_echo_response(self, resp):
+    #     pass
+    
+    
+    def echo(self, topic, echo_handler):
+        # logger.debug(f"topic: {topic}")
+        self._echo_handlers[topic] = echo_handler
+        self.publish(topic='system.echo', payload=topic)
+
+
+    def _handle_echo(self, topic:str, payload):
+        echo_topic = payload.decode('utf-8')
+        # logger.debug(f"topic: {topic}, echo_topic: {echo_topic}")
+        if echo_topic in self.subscribed_topics:
+            resp = {
+                'topic': echo_topic,
+                'agent_id': self.agent_id,
+            }
+            self.publish('system.echo_response', json.dumps(resp))
+        
+
+    def _handle_echo_response(self, topic:str, payload):
+        resp = json.loads(payload.decode('utf-8'))
+        if echo_handler := self._echo_handlers.get(resp['topic']):
+            echo_handler(resp)
+
     
     def _on_connect(self):
         logger.info(f"{self.short_id}> {self.name} Broker is connected.")
         
-        self.subscribe("echo")
-        self.subscribe("terminate")
+        self.subscribe("system.echo", topic_handler=self._handle_echo)
+        self.subscribe("system.echo_response", topic_handler=self._handle_echo_response)
+        # self.subscribe("terminate")
         self.on_connected()
             
             

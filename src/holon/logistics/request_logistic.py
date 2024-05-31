@@ -15,7 +15,7 @@ class RequestLogistic(BaseLogistic):
     __handlers = {}
     
     
-    def __init__(self, agent:HolonicAgent, request_id="", job_topic=None):
+    def __init__(self, agent:HolonicAgent=None, request_id="", job_topic=None):
         self.agent = agent
         self.job_topic = job_topic
         self.request_id = request_id
@@ -61,8 +61,8 @@ class RequestLogistic(BaseLogistic):
                 raise Exception("The job topic has not been set yet.")
         response_topic = f"{self.response_topic_header}.{topic}"
         logger.debug(f"response_topic: {response_topic}")
-        self.agent.subscribe(response_topic, datatype, self.handle_response)
         RequestLogistic.__handlers[self.response_topic_header] = topic_handler
+        return self.agent.subscribe(response_topic, datatype, self.handle_response)
 
 
     def handle_response(self, topic:str, payload):

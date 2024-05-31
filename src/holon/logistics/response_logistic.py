@@ -34,10 +34,11 @@ class ResponseLogistic(BaseLogistic):
 
         request_topic = f"{SUBSCRIBE_HEADER}.{topic}"
         logger.debug(f"request_topic: {request_topic}")
-        self.agent.subscribe(request_topic, datatype, self.handle_request)
 
         if topic_handler:
             self.agent.set_topic_handler(topic, topic_handler)
+            
+        return self.agent.subscribe(request_topic, datatype, self.handle_request)
             
             
     def get_original_topic(self, source_payload):
