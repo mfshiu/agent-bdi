@@ -59,6 +59,7 @@ class LoadingCoordinator(BaseLogistic):
         
         self.loading_rate = self.loading_evaluator(topic, payload)
         self.rank_number = self.loading_rate * 10000 + random.randint(0, 9999)
+        logger.debug(f"loading_rate: {self.loading_rate}, rank_number: {self.rank_number}")
 
         rank_payload = {
             "agent_id": self.agent.agent_id,

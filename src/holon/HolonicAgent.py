@@ -149,11 +149,7 @@ class HolonicAgent(Agent, BrokerNotifier):
         if self._agent_proc:
             signal.signal(signal.SIGINT, signal_handler)
 
-        # self.agent_id = str(uuid.uuid1()).replace("-", "")
-        # self.short_id = hashlib.md5(self.agent_id.encode()).hexdigest()[:6]
-        # logger.debug(f"agent_id: {self.agent_id}, short_id: {self.short_id}")
         self._terminate_lock = threading.Event()
-        # self._logistics = []
         
         logger.debug(f"{self.short_id}> Create broker")
         if broker_type := self.config.get_broker_type():
@@ -291,16 +287,16 @@ class HolonicAgent(Agent, BrokerNotifier):
         
 
     @final
-    def terminate(self):
+    def terminate(self, topic=None, payload=None, source_payload=None):
         logger.warn(f"{self.short_id}> {self.name}.")
 
-        for a in self.head_agents:
-            name = a.__class__.__name__
-            # self.publish(topic='terminate', payload=name)
+        # for a in self.head_agents:
+        #     #name = a.__class__.__name__
+        #     # self.publish(topic='terminate', payload=name)            
 
-        for a in self.body_agents:
-            name = a.__class__.__name__
-            # self.publish(topic='terminate', payload=name)
+        # for a in self.body_agents:
+        #     # name = a.__class__.__name__
+        #     # self.publish(topic='terminate', payload=name)
 
         self._terminate_lock.set()
 
@@ -344,7 +340,7 @@ class HolonicAgent(Agent, BrokerNotifier):
         
         self.subscribe("system.echo", topic_handler=self._handle_echo)
         self.subscribe("system.echo_response", topic_handler=self._handle_echo_response)
-        # self.subscribe("terminate")
+        self.subscribe("system.terminate", topic_handler=self.terminate)
         self.on_connected()
             
             

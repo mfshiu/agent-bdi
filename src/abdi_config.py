@@ -22,8 +22,8 @@ class AbdiConfig:
             return BrokerType.Empty
         
     
-    def get(self, key:str):
-        return self.options.get(key)
+    def get(self, key:str, default=None):
+        return self.options.get(key, default)
         
     
     def set(self, key:str, value):
