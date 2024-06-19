@@ -5,12 +5,12 @@ import random
 import threading
 import time
 
-from abdi_config import LOGGER_NAME
+from abdi_config import AbdiConfig
 from holon.HolonicAgent import HolonicAgent
 from holon.logistics.base_logistic import BaseLogistic
 
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger(AbdiConfig.LOGGER_NAME)
 HEADER_RANKING = "@ranking"
 HEADER_ELECTED = "@elected"
 

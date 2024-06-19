@@ -3,11 +3,9 @@ import logging
 from broker import BrokerType
 
 
-LOGGER_NAME = "ABDI"
-
-
-
 class AbdiConfig:
+    LOGGER_NAME = "ABDI"
+    
     def __init__(self, options=None):
         self.options = options if options else {}
 

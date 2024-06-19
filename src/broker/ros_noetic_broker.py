@@ -5,10 +5,10 @@ from std_msgs.msg import String, Int32, UInt8MultiArray
 
 from broker.message_broker import MessageBroker
 from broker.notifier import BrokerNotifier
-from abdi_config import LOGGER_NAME
+from abdi_config import AbdiConfig
 
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger(AbdiConfig.LOGGER_NAME)
 
 
 class RosNoeticBroker(MessageBroker):

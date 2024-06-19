@@ -5,10 +5,10 @@ import os
 import re
 from pathlib import Path
 
-from abdi_config import LOGGER_NAME
+from abdi_config import AbdiConfig
 
 
-__logger = logging.getLogger(LOGGER_NAME)
+__logger = logging.getLogger(AbdiConfig.LOGGER_NAME)
 __log_init = False
 
 

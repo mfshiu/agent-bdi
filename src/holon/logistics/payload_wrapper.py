@@ -4,9 +4,10 @@ import logging
 import pickle
 import uuid
 
-from abdi_config import LOGGER_NAME
+from abdi_config import AbdiConfig
 
-logger = logging.getLogger(LOGGER_NAME)
+
+logger = logging.getLogger(AbdiConfig.LOGGER_NAME)
 VERSION = "0001"
 VERSION_BYTES = VERSION.encode('utf-8')
 # WRAPPER_HEAD = "950f7f7ba7c111eea5c4ff9ca9F3fcfd"

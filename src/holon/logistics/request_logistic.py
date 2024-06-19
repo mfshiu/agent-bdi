@@ -1,12 +1,12 @@
 import logging
 
-from abdi_config import LOGGER_NAME
+from abdi_config import AbdiConfig
 from holon.HolonicAgent import HolonicAgent
 from holon.logistics.base_logistic import BaseLogistic
 from holon.logistics.payload_wrapper import PayloadWrapper
 
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger(AbdiConfig.LOGGER_NAME)
 PUBLISH_HEADER = "@request"
 SUBSCRIBE_HEADER = "@response"
 

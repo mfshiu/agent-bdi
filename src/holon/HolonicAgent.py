@@ -14,7 +14,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
-from abdi_config import AbdiConfig, LOGGER_NAME
+from abdi_config import AbdiConfig
 from broker.notifier import BrokerNotifier
 from broker.broker_maker import BrokerMaker
 from core.Agent import Agent
@@ -24,7 +24,7 @@ from holon.HolonicIntention import HolonicIntention
 from holon.logistics.base_logistic import BaseLogistic
 
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger(AbdiConfig.LOGGER_NAME)
 
 
 class HolonicAgent(Agent, BrokerNotifier):
